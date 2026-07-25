@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hex_truchet state and trajectory schemas",
+  "$defs": {
+    "state": {
+      "type": "object",
+      "description": "One serialized hex_truchet state. Mirrors spec.md's state-space table exactly. All fields are exact integers; no field needs x-atol.",
+      "properties": {
+        "t": { "type": "integer", "minimum": 0, "maximum": 37 },
+        "current_player": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "board_tile": {
+          "type": "array", "minItems": 37, "maxItems": 37,
+          "items": { "type": "integer", "enum": [-1, 0, 2] }
+        },
+        "board_rotation": {
+          "type": "array", "minItems": 37, "maxItems": 37,
+          "items": { "type": "integer", "minimum": 0, "maximum": 5 }
+        },
+        "hand_p0": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": { "type": "integer", "enum": [-1, 0, 2] }
+        },
+        "hand_p1": {
+          "type": "array", "minItems": 3, "maxItems": 3,
+          "items": { "type": "integer", "enum": [-1, 0, 2] }
+        },
+        "score_p0": { "type": "integer", "minimum": 0, "maximum": 500 },
+        "score_p1": { "type": "integer", "minimum": 0, "maximum": 500 }
+      },
+      "required": ["t", "current_player", "board_tile", "board_rotation",
+                   "hand_p0", "hand_p1", "score_p0", "score_p1"],
+      "additionalProperties": false
+    },
+    "action": {
+      "description": "Flat action index in [0, 666), decoding to (hand_slot, cell_idx, rotation) per spec.md's Actions section.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 665
+    },
+    "trajectory": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "env": { "type": "string" },
+            "format_version": { "type": "string" },
+            "simulacrum_version": { "type": "string" },
+            "seed": { "type": "integer" },
+            "source": { "enum": ["reference", "batched"] },
+            "instance": { "type": ["integer", "null"] },
+            "git_sha": { "type": ["string", "null"] },
+            "created_at": { "type": "string" }
+          },
+          "required": ["env", "format_version", "seed", "source", "created_at"]
+        },
+        "initial": {
+          "type": "object",
+          "properties": {
+            "episode": { "type": "integer" },
+            "state": { "$ref": "#/$defs/state" }
+          },
+          "required": ["episode", "state"]
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "t": { "type": "integer" },
+              "episode": { "type": "integer" },
+              "state": { "$ref": "#/$defs/state" },
+              "action": { "$ref": "#/$defs/action" },
+              "reward": { "type": "number" },
+              "terminated": { "type": "boolean" }
+            },
+            "required": ["t", "episode", "state", "action", "reward", "terminated"]
+          }
+        }
+      },
+      "required": ["metadata", "initial", "steps"]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+3,2,bag,False,greedy,random,1.0000,0.0000,0.1516
+3,2,bag,True,greedy,random,1.0000,0.0000,0.1246
+3,2,pool,False,greedy,random,1.0000,0.0000,0.4241
+3,2,pool,True,greedy,random,1.0000,0.0000,0.3572
+3,2,hand,False,greedy,random,1.0000,0.0000,0.4390
+3,2,hand,True,greedy,random,1.0000,0.0000,0.3609
+3,3,bag,False,greedy,random,1.0000,0.0000,0.1175
+3,3,bag,True,greedy,random,1.0000,0.0000,0.0905
+3,3,pool,False,greedy,random,0.9833,0.0000,0.2884
+3,3,pool,True,greedy,random,1.0000,0.0000,0.2524
+3,3,hand,False,greedy,random,1.0000,0.0000,0.3004
+3,3,hand,True,greedy,random,1.0000,0.0000,0.2589

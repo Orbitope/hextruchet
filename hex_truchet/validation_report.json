@@ -1,0 +1,79 @@
+{
+  "env": "hex_truchet",
+  "overall_pass": true,
+  "created_at": "2026-07-22T17:05:40.025386+00:00",
+  "git_sha": null,
+  "versions": {
+    "python": "3.13.0",
+    "platform": "macOS-14.3-arm64-arm-64bit-Mach-O",
+    "simulacrum": "0.1.0",
+    "torch": "2.13.0",
+    "numpy": "2.5.1"
+  },
+  "tests": {
+    "test_spec_contract": {
+      "outcome": "passed",
+      "duration": 0.005,
+      "message": null
+    },
+    "test_differential": {
+      "outcome": "passed",
+      "duration": 3.225,
+      "message": null
+    },
+    "test_batch_independence": {
+      "outcome": "passed",
+      "duration": 2.112,
+      "message": null
+    },
+    "test_invariant_sweep": {
+      "outcome": "passed",
+      "duration": 11.201,
+      "message": null
+    },
+    "test_auto_reset": {
+      "outcome": "passed",
+      "duration": 8.465,
+      "message": null
+    },
+    "test_determinism": {
+      "outcome": "passed",
+      "duration": 0.606,
+      "message": null
+    },
+    "test_replay": {
+      "outcome": "passed",
+      "duration": 0.282,
+      "message": null
+    },
+    "test_scripted_policies": {
+      "outcome": "skipped",
+      "duration": 0.0,
+      "message": "Skipped: no scripted policies provided (HarnessConfig.scripted_policies)"
+    },
+    "test_benchmark_factory_parity": {
+      "outcome": "skipped",
+      "duration": 0.0,
+      "message": "Skipped: no separate benchmark_factory configured"
+    },
+    "test_throughput": {
+      "outcome": "passed",
+      "duration": 48.058,
+      "message": null
+    }
+  },
+  "required_tests_not_passed": [],
+  "tolerance_fields_used": {},
+  "throughput": {
+    "reference_steps_per_sec": 3584.432804130896,
+    "batched": {
+      "n=1,debug=False": 1416.9780766473857,
+      "n=1,debug=True": 1144.6293165996947,
+      "n=64,debug=False": 13415.027988559741,
+      "n=64,debug=True": 13003.483203264144,
+      "n=1024,debug=False": 14372.558603098512,
+      "n=1024,debug=True": 13544.207403243452
+    },
+    "speedup_at_largest_batch": 4.009716289432122
+  }
+}
