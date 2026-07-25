@@ -20,6 +20,11 @@ venv/
 # should be tracked (e.g. via Git LFS) once a "final" checkpoint is settled.
 *.pt
 
+# Dev notes / planning docs -- not part of the codebase (HANDOFF.md says so
+# itself: "keep it out of git alongside other dev notes").
+hextruchet_first_pass/HANDOFF.md
+viz/GODOT_GAME_PLAN.md
+
 # Local-only browser-preview scaffold (wraps viewer.html's body in a full
 # HTML doc for local testing) -- viewer.html itself is the real deliverable.
 viz/viewer_preview.html
