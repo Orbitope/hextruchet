@@ -21,7 +21,9 @@ venv/
 *.pt
 
 # No markdown docs tracked -- planning/meta docs and specs alike stay local-only.
+# Exception: README.md is the repo's public entry point, not a working doc.
 *.md
+!README.md
 
 # Local-only browser-preview scaffold (wraps viewer.html's body in a full
 # HTML doc for local testing) -- viewer.html itself is the real deliverable.
