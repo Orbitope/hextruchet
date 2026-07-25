@@ -1,0 +1,100 @@
+{
+  "packs": [
+    {
+      "file": "pack_00_greedy.json",
+      "policy": "greedy",
+      "free_placement": false,
+      "tile_types": [
+        0,
+        2
+      ],
+      "seed": 1000,
+      "final_score": [
+        18,
+        13
+      ],
+      "n_loops_final": 10
+    },
+    {
+      "file": "pack_01_random.json",
+      "policy": "random",
+      "free_placement": false,
+      "tile_types": [
+        0,
+        2
+      ],
+      "seed": 1001,
+      "final_score": [
+        6,
+        5
+      ],
+      "n_loops_final": 4
+    },
+    {
+      "file": "pack_02_greedy_free.json",
+      "policy": "greedy",
+      "free_placement": true,
+      "tile_types": [
+        0,
+        2
+      ],
+      "seed": 1002,
+      "final_score": [
+        17,
+        12
+      ],
+      "n_loops_final": 10
+    },
+    {
+      "file": "pack_03_random_free.json",
+      "policy": "random",
+      "free_placement": true,
+      "tile_types": [
+        0,
+        2
+      ],
+      "seed": 1003,
+      "final_score": [
+        6,
+        2
+      ],
+      "n_loops_final": 3
+    },
+    {
+      "file": "pack_04_random_5tile.json",
+      "policy": "random",
+      "free_placement": false,
+      "tile_types": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "seed": 1004,
+      "final_score": [
+        0,
+        2
+      ],
+      "n_loops_final": 1
+    },
+    {
+      "file": "pack_05_greedy_5tile.json",
+      "policy": "greedy",
+      "free_placement": false,
+      "tile_types": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "seed": 1005,
+      "final_score": [
+        0,
+        1
+      ],
+      "n_loops_final": 1
+    }
+  ]
+}
