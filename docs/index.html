@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex Truchet — Three Ways to Fail to Beat the Obvious Move</title>
+<meta name="description" content="A hex-grid tile game about loops nobody owns. Two thousand simulated boards to find a deck worth playing, three failed attempts to beat a greedy heuristic with learning, and thirty lines of search that finally did it.">
+<meta property="og:title" content="Hex Truchet — Three Ways to Fail to Beat the Obvious Move">
+<meta property="og:description" content="Designing a hex tile game, and what it took to beat the most obvious way to play it.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --void:#111009; --surface:#1a1812; --raised:#211e17; --border:#2a2820;
+    --amber:#C49A3C; --amber-bright:#E8C068;
+    --steel:#6B7A8D; --steel-bright:#9AAABB;
+    --mauve:#9A7AB0; --sage:#7D9A6A; --terra:#C47A5A; --coral:#FF5E3A;
+    --text-bright:#EDE8DC; --text-primary:#C8C2B4; --text-muted:#6A6358;
+    --font-display:'Rajdhani',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{background:var(--void);color:var(--text-primary);font-family:var(--font-mono);
+    -webkit-font-smoothing:antialiased;line-height:1.7}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(circle,rgba(154,170,187,.10) 1px,transparent 1px);background-size:48px 48px}
+  body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(120% 120% at 50% 30%,rgba(0,0,0,0) 45%,rgba(0,0,0,.6) 100%)}
+  .wrap{position:relative;z-index:1}
+  .progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:50;
+    background:linear-gradient(90deg,var(--amber),var(--amber-bright))}
+  a{color:var(--amber-bright)}
+
+  /* ── hero ───────────────────────────────────────────────────────── */
+  .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:80px 24px;overflow:hidden}
+  #herofield{position:absolute;inset:0;width:100%;height:100%;opacity:.26;pointer-events:none}
+  .hero-in{position:relative;z-index:1}
+  .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);margin-bottom:22px}
+  .hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(36px,7.4vw,80px);line-height:1.02;
+    color:var(--text-bright);max-width:17ch;margin:0 auto}
+  .hero h1 .accent{color:var(--amber-bright)}
+  .hero .sub{margin-top:24px;max-width:60ch;font-size:14px;color:var(--text-muted);line-height:1.75;margin-left:auto;margin-right:auto}
+  .hero .sub b{color:var(--text-primary);font-weight:500}
+  .scroll-cue{margin-top:46px;font-size:11px;letter-spacing:.2em;color:var(--text-muted);
+    text-transform:uppercase;animation:bob 2s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+  @media (prefers-reduced-motion:reduce){.scroll-cue{animation:none}}
+
+  /* ── prose beats ────────────────────────────────────────────────── */
+  .beat{max-width:680px;margin:0 auto;padding:12vh 24px 3vh}
+  .beat.tight{padding-top:5vh}
+  .beat .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin-bottom:18px}
+  .beat h2{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,4.5vw,40px);
+    color:var(--text-bright);line-height:1.12;margin-bottom:20px}
+  .beat h3{font-family:var(--font-display);font-weight:600;font-size:20px;color:var(--text-bright);
+    margin:30px 0 12px;letter-spacing:.02em}
+  .beat p{font-size:15px;color:var(--text-primary);margin-bottom:16px}
+  .beat p b{color:var(--text-bright);font-weight:500}
+  .beat .amber{color:var(--amber-bright)} .beat .sage{color:var(--sage)}
+  .beat .coral{color:var(--coral)} .beat .steel{color:var(--steel-bright)}
+  .beat .dim{color:var(--text-muted)}
+  .beat ol,.beat ul{margin:0 0 18px 0;padding-left:20px;font-size:15px}
+  .beat li{margin-bottom:10px}
+  blockquote{border-left:2px solid var(--amber);padding:4px 0 4px 20px;margin:24px 0;
+    font-size:16px;color:var(--text-bright);line-height:1.6}
+  .rule{width:1px;height:60px;margin:0 auto;background:linear-gradient(transparent,var(--border),transparent)}
+  code{font-family:var(--font-mono);font-size:.92em;color:var(--amber-bright);
+    background:var(--raised);padding:1px 5px;border-radius:3px}
+
+  /* ── figures ────────────────────────────────────────────────────── */
+  .fig{max-width:940px;margin:34px auto;border:1px solid var(--border);border-radius:6px;
+    overflow:hidden;background:#0d0c07}
+  .fig.narrow{max-width:660px}
+  .fig .cap{font-size:11px;color:var(--text-muted);padding:11px 16px;border-top:1px solid var(--border);letter-spacing:.03em}
+  .wdg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;
+    border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted);letter-spacing:.04em;flex-wrap:wrap}
+  .wdg-head b{color:var(--text-bright);font-weight:500}
+  .wdg-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+
+  .btn{font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:4px;
+    padding:7px 14px;cursor:pointer;transition:.2s}
+  .btn:hover{color:var(--text-bright);border-color:var(--amber)}
+  .btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn.on{color:#0d0c07;background:var(--amber);border-color:var(--amber)}
+  .toggle-row{display:flex;border-bottom:1px solid var(--border)}
+  .toggle{flex:1;padding:12px 6px;font-family:var(--font-display);font-weight:600;font-size:12px;
+    letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;background:transparent;
+    color:var(--text-muted);border:none;border-right:1px solid var(--border);
+    border-bottom:2px solid transparent;transition:.2s}
+  .toggle:last-child{border-right:none}
+  .toggle.active{color:var(--text-bright);border-bottom-color:var(--amber);background:var(--surface)}
+  .toggle:hover{color:var(--text-primary)}
+
+  /* ── board rendering ────────────────────────────────────────────── */
+  .bsvg{display:block;width:100%;margin:0 auto;touch-action:manipulation}
+  .cellh{fill:var(--raised);stroke:#000;stroke-opacity:.30;stroke-width:1}
+  .cellh.empty{fill:transparent;stroke:var(--border)}
+  .cellh.encl{fill:rgba(196,154,60,.13)}
+  .arc{fill:none;stroke-linecap:round;stroke-width:3.2;stroke:#4a463c}
+  .arc.loop{stroke-width:4.4}
+  .arc.a{stroke:var(--amber)} .arc.b{stroke:var(--steel)}
+  .arc.dim{opacity:.25}
+
+  .tiles-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+  @media(max-width:640px){.tiles-row{grid-template-columns:repeat(3,1fr)}}
+  .tilecard{padding:16px 8px 14px;text-align:center;border-right:1px solid var(--border);cursor:pointer;
+    transition:background .2s}
+  .tilecard:last-child{border-right:none}
+  .tilecard:hover{background:var(--surface)}
+  .tilecard.sel{background:var(--surface)}
+  .tilecard svg{width:100%;max-width:96px;display:block;margin:0 auto}
+  .tilecard .nm{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  .tilecard.sel .nm{color:var(--amber-bright)}
+  .tilecard .sp{font-size:11px;color:var(--text-muted);margin-top:8px}
+  .tilecard .rc{font-size:11px;margin-top:3px;color:var(--steel-bright)}
+  .tilecard .rc.one{color:var(--coral)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .two>div+div{border-left:1px solid var(--border)}
+  @media(max-width:680px){.two{grid-template-columns:1fr}.two>div+div{border-left:none;border-top:1px solid var(--border)}}
+  .two h4{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text-muted);padding:14px 16px 0;text-align:center}
+  .two h4 b{color:var(--text-bright)}
+  .stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:6px 12px 14px;
+    font-size:11px;color:var(--text-muted)}
+  .stats .v{color:var(--amber-bright);font-weight:500;font-variant-numeric:tabular-nums;font-size:16px;display:block}
+  .stats .v.bad{color:var(--coral)} .stats .v.good{color:var(--sage)}
+  .stats div{text-align:center}
+
+  /* ── scrollytelling: sticky chart + steps ───────────────────────── */
+  .scrolly{position:relative;max-width:1180px;margin:0 auto;padding:0 24px;
+    display:grid;grid-template-columns:1fr 1fr;gap:48px}
+  @media(max-width:900px){.scrolly{grid-template-columns:1fr;gap:0}}
+  .graphic-col{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center}
+  @media(max-width:900px){.graphic-col{height:52vh;top:0;z-index:2;
+    background:linear-gradient(var(--void) 78%,transparent)}}
+  .steps-col{padding:16vh 0}
+  @media(max-width:900px){.steps-col{padding:2vh 0}}
+  .step{min-height:86vh;display:flex;flex-direction:column;justify-content:center;opacity:.3;transition:opacity .4s}
+  .step.active{opacity:1}
+  @media(max-width:900px){.step{min-height:70vh}}
+  .step .n{font-size:11px;letter-spacing:.2em;color:var(--amber);margin-bottom:12px}
+  .step h3{font-family:var(--font-display);font-weight:600;font-size:clamp(20px,3vw,28px);
+    color:var(--text-bright);line-height:1.18;margin-bottom:12px}
+  .step p{font-size:14px;color:var(--text-primary);margin-bottom:12px}
+  .step p b{color:var(--text-bright);font-weight:500}
+  #methods{width:100%;max-width:520px}
+  #methods text{font-family:var(--font-mono)}
+
+  /* ── tables ─────────────────────────────────────────────────────── */
+  table.t{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+  table.t th{font-family:var(--font-display);font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    font-size:11px;color:var(--text-muted);text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
+  table.t th:first-child{text-align:left}
+  table.t td{padding:9px 12px;text-align:right;border-bottom:1px solid rgba(42,40,32,.6);color:var(--text-primary)}
+  table.t td:first-child{text-align:left;color:var(--text-muted)}
+  table.t tr.hi td{background:rgba(196,154,60,.07);color:var(--text-bright)}
+  table.t tr.hi td:first-child{color:var(--amber-bright)}
+  table.t .bar{display:inline-block;height:7px;border-radius:2px;background:var(--steel);vertical-align:middle}
+  table.t tr.hi .bar{background:var(--amber)}
+  .tag{font-weight:500;letter-spacing:.1em;padding:2px 8px;border-radius:3px;font-size:10px;
+    text-transform:uppercase;white-space:nowrap;font-family:var(--font-display)}
+  .tag.ok{color:#0d0c07;background:var(--sage)} .tag.no{color:#0d0c07;background:var(--coral)}
+  .tag.mid{color:#0d0c07;background:var(--amber)}
+
+  /* ── outro ──────────────────────────────────────────────────────── */
+  .outro{max-width:680px;margin:0 auto;padding:12vh 24px 6vh;text-align:center}
+  .outro h2{font-family:var(--font-display);font-weight:600;font-size:clamp(24px,4vw,38px);
+    color:var(--text-bright);margin-bottom:18px}
+  .outro p{font-size:14px;color:var(--text-muted);margin-bottom:22px}
+  .cta{display:inline-block;font-family:var(--font-display);font-weight:700;font-size:15px;
+    letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:#0d0c07;
+    background:var(--amber);border-radius:5px;padding:14px 34px;transition:.2s}
+  .cta:hover{background:var(--amber-bright)}
+  .caveats{max-width:680px;margin:0 auto;padding:5vh 24px 2vh;font-size:12px;color:var(--text-muted);line-height:1.75}
+  .caveats h4{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--text-muted);margin-bottom:16px}
+  .caveats .c{display:flex;gap:10px;margin-bottom:12px}
+  .caveats .c::before{content:"▸";color:var(--amber);flex:none}
+  .caveats b{color:var(--text-primary);font-weight:500}
+  .foot{max-width:680px;margin:0 auto;padding:4vh 24px 10vh;text-align:center;
+    font-size:11px;color:var(--text-muted);letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="wrap">
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header class="hero">
+  <svg id="herofield" aria-hidden="true"></svg>
+  <div class="hero-in">
+    <div class="kicker">Hex Truchet · game design &amp; search</div>
+    <h1>Three ways to fail to beat <span class="accent">the obvious move</span>.</h1>
+    <p class="sub">A tile game where the thing you score — a closed loop — belongs to the board rather than to either player. Finding a deck worth playing took <b>2,000 simulated boards</b>. Beating the dumbest possible strategy took <b>three failed attempts</b> and then about thirty lines of code with no learning in it at all.</p>
+    <div class="scroll-cue">scroll</div>
+  </div>
+</header>
+
+<!-- ═══════════════════ 1 · THE GAME ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">First, the game</div>
+  <h2>Arcs connect. Eventually one bites its own tail.</h2>
+  <p>A Truchet tile is a square with a decoration that isn't rotationally symmetric — two quarter-circles, say. Tile a plane with them at random angles and the arcs chain across tile boundaries into long meandering curves. It's a century-old idea that still shows up in generative art, and the appeal is that the pattern is entirely emergent: no single tile knows anything about the curve it belongs to.</p>
+  <p>Hex Truchet is what happens if you put that on a hex grid and make two people fight over it.</p>
+  <p>Every cell is a hexagon with six edges, and every tile is <b>three arcs pairing those six edges up</b>. Place a tile beside an existing one and the arcs join across the shared edge. Keep going and eventually a chain closes into a loop. <b class="amber">Closing a loop scores you the number of cells it encloses.</b> Board is 37 cells, game is 37 turns, highest score wins.</p>
+</section>
+
+<figure class="fig reveal" id="fig-game">
+  <div class="wdg-head">
+    <span>A real recorded game · <b id="g-move">move 0</b> of 37</span>
+    <span>closed loops tint <b style="color:var(--amber-bright)">amber</b> / <b style="color:var(--steel-bright)">steel</b> by who sealed them</span>
+  </div>
+  <svg class="bsvg" id="gboard" style="max-width:420px;padding:14px 0"></svg>
+  <div class="wdg-foot">
+    <span>score <b style="color:var(--amber-bright)" id="g-s0">0</b> — <b style="color:var(--steel-bright)" id="g-s1">0</b></span>
+    <span style="flex:1;min-width:140px"><input type="range" id="g-scrub" min="0" max="37" value="0" style="width:100%"></span>
+    <button class="btn" id="g-play">Play</button>
+  </div>
+  <div class="cap">Two greedy players alternate. Watch for the moment a long chain seals — the score jumps by the area it just captured, not by one.</div>
+</figure>
+
+<!-- ═══════════════════ 2 · FIVE TILES ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">The vocabulary</div>
+  <h2>There are only five tiles.</h2>
+  <p>Six edges can be paired up 15 ways. Quotient those by rotation and you're left with <b>five distinct tiles</b> — a small enough alphabet to learn in a minute, with real texture between the extremes. Tile&nbsp;0 curls everything back on itself. Tile&nbsp;4 sends everything straight across and never turns.</p>
+  <p>That last column below isn't trivia. <b class="coral">Tile 4 looks identical in all six rotations</b>, so in the finished game, pressing the rotate key on a straight-through tile does nothing, six times in a row — which reads to a player as a broken control. The UI has to skip aliased rotations. It's the sort of thing you only find by holding the thing in your hands.</p>
+</section>
+
+<figure class="fig reveal" id="fig-tiles">
+  <div class="wdg-head"><span>Click a tile to rotate it</span><span id="t-hint">tile 0 · rotation 0</span></div>
+  <div class="tiles-row" id="tilesrow"></div>
+  <div class="cap">Distinct rotations = the size of the tile's orbit under the rotation group. They sum to 15, which is where the five come from.</div>
+</figure>
+
+<!-- ═══════════════════ 3 · THE DECK ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">The design problem</div>
+  <h2>The deck is the design.</h2>
+  <p>The first real finding was that using all five tiles equally produces a game where mostly nothing happens. Fill a 37-cell board from a uniform deck and you close <b class="coral">0.70 loops on average</b>, with <b class="coral">48% of boards closing nothing at all</b>. Half your games end scoreless. That isn't a game, it's a screensaver.</p>
+  <p>The fix is blunter than I expected: throw out three of the five tiles. Use only tile&nbsp;0 and tile&nbsp;2 in a <b class="amber">1:2 ratio</b> — twelve and twenty-five on a 37-cell board. Tile&nbsp;0 curls arcs back toward each other, tile&nbsp;2 carries a chain across distance, and the mix makes closure common without making it automatic. Same board, same random placement, <b class="sage">4.19 loops</b> and a 0.8% chance of a dead game.</p>
+</section>
+
+<figure class="fig reveal" id="fig-deck">
+  <div class="wdg-head"><span>Real boards, filled at random from each deck</span><button class="btn" id="d-roll">Roll new boards</button></div>
+  <div class="two">
+    <div>
+      <h4>Uniform · <b>all five tiles</b></h4>
+      <svg class="bsvg" id="dboardU" style="max-width:250px;padding:6px 0"></svg>
+      <div class="stats">
+        <div><span class="v bad" id="dU-loops">–</span>loops here</div>
+        <div><span class="v" id="dU-mean">0.70</span>mean of 2,000</div>
+        <div><span class="v bad" id="dU-zero">48.5%</span>scoreless</div>
+      </div>
+    </div>
+    <div>
+      <h4>Tuned · <b>12 × tile 0, 25 × tile 2</b></h4>
+      <svg class="bsvg" id="dboardT" style="max-width:250px;padding:6px 0"></svg>
+      <div class="stats">
+        <div><span class="v good" id="dT-loops">–</span>loops here</div>
+        <div><span class="v" id="dT-mean">4.19</span>mean of 2,000</div>
+        <div><span class="v good" id="dT-zero">0.8%</span>scoreless</div>
+      </div>
+    </div>
+  </div>
+  <div class="cap">Closed loops are highlighted and their enclosed cells tinted. Every board is generated by the real engine; the means come from 2,000 trials of each.</div>
+</figure>
+
+<!-- ═══════════════════ 4 · MINIMAL LOOPS ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">The finding that shaped scoring</div>
+  <h2>Most loops are the smallest possible loop.</h2>
+  <p>And there is nothing you can do about it:</p>
+  <blockquote>No matter how the deck is reweighted, <b>between 61% and 75% of every closed loop is the minimal one</b> — three tight turns curling around a single vertex.</blockquote>
+  <p>That's not a tuning problem, it's a property of hexagonal geometry. Three tight turns meeting at a corner is by far the easiest way for arcs to close, and it stays dominant under every deck and board size I tried. I spent a while trying to engineer around it with "spacer" tiles meant to push closures apart, and the experiment came back not merely negative but <b>backwards</b> — spacers concentrated even more probability onto the minimal case. That path is closed.</p>
+  <p>So the design accepts it instead. Scoring by <b class="amber">enclosed area</b> rather than by loop count makes minimal loops cheap, fast, incidental points, and puts the real decision weight on the rare long loops that wrap actual territory. Scoring purely by loop count, tested head to head, was consistently the <b>weakest</b> separator of skill — it pays out exactly the thing the geometry hands you for free.</p>
+</section>
+
+<figure class="fig narrow reveal" id="fig-hist">
+  <div class="wdg-head"><span>Loop length distribution · <b>tuned deck</b>, 2,000 boards</span><span id="h-tot"></span></div>
+  <svg id="hist" style="display:block;width:100%;padding:16px 8px 4px"></svg>
+  <div class="cap">Length is arcs per loop, always a multiple of three. The first bar is the minimal loop; everything to its right is where the game actually lives.</div>
+</figure>
+
+<!-- ═══════════════════ 5 · GREEDY SETUP ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">The question that ate the project</div>
+  <h2>Is any of this actually strategic?</h2>
+  <p>There's an obvious way to play. Every turn, look at all your legal placements and make the one that scores the most <b>right now</b>. Call it greedy. It's the first thing anyone would code, and roughly what a new player does.</p>
+  <p>Greedy is very good. Against a player making random legal moves it wins 100% of games in eleven of the twelve configurations I tested. That's a low bar. The worrying part was what happened when I tried to beat greedy itself — because if nothing beats it, then the strategic depth I thought I was designing doesn't exist, and the game is a dice roll with extra steps.</p>
+  <p class="dim">What follows is four attempts, in the order I made them. Only one of them worked, and it isn't the one I spent the most time on.</p>
+</section>
+
+<!-- ═══════════════════ SCROLLY ═══════════════════ -->
+<section class="scrolly">
+  <div class="graphic-col">
+    <svg id="methods" viewBox="0 0 460 400"></svg>
+  </div>
+  <div class="steps-col">
+    <div class="step" data-step="0">
+      <div class="n">Attempt 01 · a smarter heuristic</div>
+      <h3>Blocking the opponent doesn't help.</h3>
+      <p>The obvious strategic idea — weigh denying the opponent's future scoring against your own immediate gain — is the thing you'd tell a new player to start thinking about. I built it.</p>
+      <p>Against greedy it won between <b>41.7% and 58.3%</b> of games. A coin flip. It genuinely plays differently — denial-vs-denial games have consistently higher margins than greedy-vs-greedy — it just doesn't play <b>better</b>.</p>
+    </div>
+    <div class="step" data-step="1">
+      <div class="n">Attempt 02 · self-play RL</div>
+      <h3>It learned to beat random and stopped.</h3>
+      <p>So I built the whole apparatus: a batched reinforcement-learning environment, a readable reference implementation differentially tested bit-for-bit against a vectorized tensor version, twelve invariants, the works. Then trained a policy against itself.</p>
+      <p>Across six checkpoints its win rate against greedy was 0.000, 0.000, 0.000, 0.000, and finally <b class="coral">0.004</b>. The diagnostic was brutal: it averaged <b>0.46 points</b> per game against greedy's 28.6 — while scoring 13.6 against random. It hadn't learned nothing. It learned something that evaporated on contact with a competent opponent.</p>
+    </div>
+    <div class="step" data-step="2">
+      <div class="n">Attempt 03 · train directly against greedy</div>
+      <h3>A plateau at nine percent.</h3>
+      <p>Cold-start never moved off zero and lost ground against random while it did. Warm-starting from the self-play checkpoint produced the only real progress of the entire RL effort — climbing to <b class="amber">8.6%</b> before flattening into a noisy 4–9% band with the margin pinned around −9.5.</p>
+      <p>And here's the detail I keep coming back to. Most of that margin gain came from <b>suppressing greedy's score</b> (28.6 → 12.8), not from scoring more itself (0.46 → 3.83). It had learned to be a nuisance. It had not learned to play.</p>
+    </div>
+    <div class="step" data-step="3">
+      <div class="n">Attempt 04 · no learning at all</div>
+      <h3>Thirty lines of search.</h3>
+      <p>Rank your legal moves by immediate score — that ranking <b>is</b> the greedy heuristic — take the top K, and for each one simulate the rest of the game with both sides playing plain greedy. Keep whichever candidate produced the best final margin.</p>
+      <p>That's it. One step of policy improvement over greedy, no network anywhere. At K=8, rolling every candidate to the end of the game: <b class="sage">50 wins out of 50</b>, average score 27.98 to 5.34, margin <b class="sage">+22.64</b>. At that sample size a perfect record against a true win probability under 90% is a sub-1% event.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 6 · WHAT IT MEANT ═══════════════════ -->
+<section class="beat tight">
+  <div class="eyebrow">The verdict</div>
+  <h2>Each method failed for its own reason.</h2>
+  <p>Three independent approaches all said "greedy is approximately unbeatable," and that left two very different explanations on the table. Either the game's strategic ceiling really is that low — or all three methods failed for their own reasons and none of them is evidence about the game at all.</p>
+  <p>The second one is uncomfortable, because "my methods were bad" is exactly what you say when you don't want to accept a result. But the search bot settles it, and in hindsight the three failures are cleanly separable:</p>
+  <ul>
+    <li><b>The denial heuristic</b> looked one ply ahead. The exploit isn't visible from there.</li>
+    <li><b>Self-play</b> stalled in mutual mediocrity. Its two seats are the same evolving policy, so it only ever faces an equally mediocre copy of itself — nothing forces it to become as mechanically sharp as "always grab the best available score." This is a known failure mode, and it's why serious self-play systems mix in scripted opponents and past-checkpoint exploiters rather than trusting self-play alone.</li>
+    <li><b>Direct RL against greedy</b> plateaued on credit assignment: sparse terminal reward plus a flat, spatially-blind observation. The network sees a vector, not a board — no adjacency, no loop topology to hang a strategy on.</li>
+  </ul>
+  <p>None of that is a fact about Hex Truchet. It's three facts about three methods.</p>
+</section>
+
+<!-- ═══════════════════ 7 · THE SWEEP ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">Tuning the opponent</div>
+  <h2>More search is not reliably better.</h2>
+  <p>That +22.64 configuration costs about <b>29 seconds per game</b> of pure CPU, which makes it a research instrument rather than something a person can play against. It also cheats: it sees the opponent's exact hand during its rollouts, so it's an upper bound on exploitability under perfect information, not proof a fair agent gets there.</p>
+  <p>The useful result came from sweeping the parameters — and three things fell out that I didn't expect.</p>
+</section>
+
+<figure class="fig reveal" id="fig-sweep">
+  <div class="wdg-head"><span>Rollout search vs greedy · sorted by <b id="sw-by">win rate</b></span>
+    <span><button class="btn" data-sort="win">Win</button> <button class="btn" data-sort="margin">Margin</button> <button class="btn" data-sort="sec">Cost</button></span></div>
+  <div style="overflow-x:auto"><table class="t" id="sweep">
+    <thead><tr><th>Config</th><th>K</th><th>Depth</th><th>Win vs greedy</th><th>Margin</th><th>Sec / move</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="cap">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points — so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</div>
+</figure>
+
+<section class="beat tight">
+  <ol>
+    <li><b>Depth is not where the strength lives.</b> K=3 at two plies matches or beats far deeper configurations at a fraction of the cost. Raise K before you raise depth. Depth does buy <b>margin</b> — +12.4 at eight plies versus +10.2 at two — so it makes the bot win harder, not more often.</li>
+    <li><b>More search can be worse.</b> The K=6, depth-6 configuration scored the lowest win rate of any search config while costing ten times what the cheap one does.</li>
+    <li><b>The one solid, enormous difference</b> is greedy at 46.7% versus <b>any</b> search at 80–93%. Everything else in that table is noise wearing a decimal point.</li>
+  </ol>
+  <p>Which means the shipped game needs no distillation, no neural network, and no ML runtime. <b class="amber">The strong opponent is thirty lines of search</b> running in 30 milliseconds.</p>
+</section>
+
+<!-- ═══════════════════ 8 · BUILDING IT ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">From research code to a game</div>
+  <h2>Two bugs worth the retelling.</h2>
+  <p>The research all lived in Python. The game is Godot 4 and GDScript, which means the entire rules engine — legality, loop detection, scoring — had to be ported into a second language where it could quietly diverge from the first.</p>
+  <p>So it didn't get to be trusted. A Python script dumps complete games as packs: every move, the points gained, the exact set of loops closed, and both scores at every single step. A headless Godot test replays each pack through the new engine and asserts a match at every step. Only once that passed did anything get built on top. It's the same discipline that validated the RL environment's reference and vectorized implementations against each other, and it's why I could rewrite rendering later without wondering whether I'd broken the rules underneath.</p>
+  <h3>The arc that escaped its cell</h3>
+  <p>The obvious way to draw a circular arc is to hand a curve primitive a start point, an end point and a radius. Don't. SVG-style arc commands re-derive the circle centre from the radius and flags, and will cheerfully pick the reflected one — throwing the arc <b class="coral">outside</b> the hex it belongs to.</p>
+</section>
+
+<figure class="fig narrow reveal" id="fig-arc">
+  <div class="toggle-row">
+    <button class="toggle active" data-arc="good">Sampled points · correct</button>
+    <button class="toggle" data-arc="bad">Reflected centre · the bug</button>
+  </div>
+  <svg class="bsvg" id="arcdemo" style="max-width:380px;padding:16px 0"></svg>
+  <div class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline.</div>
+</figure>
+
+<section class="beat tight">
+  <h3>The board that froze the tab</h3>
+  <p>The game targets WebAssembly, and in WASM <b>the main thread must never block</b>. A bot that thinks for a full second doesn't show a spinner — it freezes the tab. No input, no rendering, nothing. That single constraint is what shapes the search budget, and it's why the bot yields between candidates rather than running its search to completion in one call.</p>
+  <p>The same constraint reappeared at deployment. Godot's web export defaults to real thread support, which requires cross-origin-isolation headers that itch.io's embed doesn't reliably serve. Turning thread support off makes the build header-independent and costs nothing — the search was never using threads, it was yielding across frames.</p>
+  <p class="dim">A note on loop detection, the one genuinely tricky port: a loop is a connected component of arcs where every arc has both ports matched, which is a union-find problem, and enclosed area is a ray-cast parity count. The tempting optimization is to examine only the neighbourhood of the tile you just placed. An early version did exactly that and was silently wrong — it under-reported whenever one tile's arcs belonged to two independent loops at once. The failing case was a single placement closing a loop of length 3 and a loop of length 18 simultaneously. The board holds at most 111 arcs. Recomputing everything on every placement is instant. Don't be clever.</p>
+</section>
+
+<!-- ═══════════════════ 9 · LOSING WELL ═══════════════════ -->
+<section class="beat">
+  <div class="eyebrow">The last problem</div>
+  <h2>Then I had to teach it to lose.</h2>
+  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves — which makes search strength <b>useless as a difficulty dial</b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
+  <p>So difficulty here isn't a search parameter. It's a <b class="amber">greedy-slip</b>: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip at all.</p>
+  <p>It's a better handicap axis than depth because it degrades the bot's <b>judgment</b> rather than its <b>reach</b>. A slipping bot still plays coherently — it just periodically fails to see the trap it's walking into, which is a recognizably human way to lose.</p>
+</section>
+
+<figure class="fig narrow reveal" id="fig-slip">
+  <div class="wdg-head"><span>Difficulty as shipped</span><span>search strength barely moves · <b>slip</b> does the work</span></div>
+  <div style="overflow-x:auto"><table class="t">
+    <thead><tr><th>Preset</th><th>K</th><th>Depth</th><th>Greedy-slip</th><th>Character</th></tr></thead>
+    <tbody>
+      <tr><td>Random</td><td>–</td><td>–</td><td>–</td><td style="text-align:right"><span class="tag ok">harmless</span></td></tr>
+      <tr><td>Easy</td><td>1</td><td>–</td><td>0%</td><td style="text-align:right"><span class="tag ok">pure greedy</span></td></tr>
+      <tr class="hi"><td>Medium</td><td>3</td><td>2</td><td>35%</td><td style="text-align:right"><span class="tag mid">beatable</span></td></tr>
+      <tr><td>Hard</td><td>3</td><td>8</td><td>0%</td><td style="text-align:right"><span class="tag no">not being fair</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="cap">Expert (K=8, full rollout) exists in the codebase but never ships — at 29 seconds a move it's a research instrument, not an opponent.</div>
+</figure>
+
+<section class="beat tight">
+  <p>What's still open is whether 35% is the right number. It was picked by reasoning, not measured. I have exactly one playtester's worth of evidence that Medium is fun to lose to, and that playtester is me. Tuning it properly is a playtesting problem rather than a coding one, which makes it simultaneously the most interesting thing left and the thing least likely to get solved by staring at the code.</p>
+  <p>Which is a nice inversion of where this started. The first half of the project was a long fight to build something that could beat the obvious strategy. The second half was teaching it how to lose convincingly.</p>
+</section>
+
+<div class="rule"></div>
+
+<!-- ═══════════════════ OUTRO ═══════════════════ -->
+<section class="outro">
+  <h2>Play it.</h2>
+  <p>Hot-seat, four bot difficulties, free placement, replays. Runs in the browser.</p>
+  <a class="cta" href="https://orbitope.itch.io/hex-truchet">Play Hex Truchet</a>
+  <p style="margin-top:26px;font-size:12px">Start on Medium. Easy is not as easy as it sounds.</p>
+</section>
+
+<section class="caveats">
+  <h4>What this doesn't claim</h4>
+  <div class="c"><div><b>The sweep is small.</b> 30 games per configuration. Differences inside the 80–93% band are not real differences, and I've tried not to lean on them.</div></div>
+  <div class="c"><div><b>The headline bot cheats.</b> The K=8 configuration sees the opponent's hand during its rollouts. +22.64 is an upper bound on exploitability under perfect information, not a fair-agent result.</div></div>
+  <div class="c"><div><b>"RL can't do this" is not the finding.</b> The finding is that <i>these</i> RL attempts failed, for reasons I can name. Dense reward shaping and a spatially-aware observation are the obvious next levers, and neither has been tried.</div></div>
+  <div class="c"><div><b>Difficulty is unvalidated.</b> One playtester. The 35% slip is a reasoned guess, not a measurement.</div></div>
+</section>
+
+<div class="foot">
+  Hex Truchet · Orbitope · <a href="https://github.com/Orbitope/hextruchet">source on GitHub</a>
+</div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+var HT = window.HT || {};
+var GEO = HT.geo, EO = GEO.edge_off, CELLS = GEO.cells;
+var SVGNS = 'http://www.w3.org/2000/svg';
+var RM = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function el(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function span(a,b){var d=Math.abs(a-b)%6;return Math.min(d,6-d);}
+
+/* progress bar */
+var prog=document.getElementById('progress');
+addEventListener('scroll',function(){var h=document.documentElement;
+  prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+
+/* reveal-on-scroll */
+if('IntersectionObserver' in window){
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},
+    {rootMargin:'0px 0px -10% 0px',threshold:.1});
+  document.querySelectorAll('.reveal').forEach(function(n){io.observe(n);});
+}else{document.querySelectorAll('.reveal').forEach(function(n){n.classList.add('in');});}
+
+/* ── geometry ───────────────────────────────────────────────────────
+   Ported from the validated viewer. The arc between two edge-midpoints
+   is sampled into explicit points along the true circle rather than
+   emitted as an SVG "A" command: "A" re-derives its own centre from the
+   radius and flags and can pick the reflected one, which throws the arc
+   outside the cell. See the arc-bug figure -- `bad` below is literally
+   that mistake, kept runnable so the figure isn't a drawing of a bug. */
+var L = GEO.L, R = L/Math.sqrt(3);
+
+function hexPts(cx,cy){var p=[];for(var k=0;k<6;k++){var a=(30+60*k)*Math.PI/180;
+  p.push((cx+R*Math.cos(a)).toFixed(2)+','+(cy+R*Math.sin(a)).toFixed(2));}return p.join(' ');}
+
+function arcPath(cx,cy,ea,eb,bad){
+  var Pa=[cx+EO[ea][0],cy+EO[ea][1]], Pb=[cx+EO[eb][0],cy+EO[eb][1]];
+  var line='M'+Pa[0].toFixed(2)+','+Pa[1].toFixed(2)+' L'+Pb[0].toFixed(2)+','+Pb[1].toFixed(2);
+  if(span(ea,eb)===3) return line;
+  var Ta=[-EO[ea][1],EO[ea][0]], Tb=[-EO[eb][1],EO[eb][0]];
+  var det=Ta[0]*(-Tb[1])-(-Tb[0])*Ta[1];
+  if(Math.abs(det)<1e-6) return line;
+  var rx=Pb[0]-Pa[0], ry=Pb[1]-Pa[1];
+  var s=(rx*(-Tb[1])-(-Tb[0])*ry)/det;
+  var Oc=[Pa[0]+s*Ta[0], Pa[1]+s*Ta[1]];
+  var r=Math.hypot(Oc[0]-Pa[0],Oc[1]-Pa[1]);
+  if(bad){
+    // The bug, reproduced. Endpoints + radius don't identify an arc: two
+    // circles of radius r pass through Pa and Pb, mirror images across the
+    // chord. Let the renderer re-derive the centre and it can take the other
+    // one -- so the curve bulges away from the cell instead of through it.
+    var ux=Pb[0]-Pa[0], uy=Pb[1]-Pa[1], ul=Math.hypot(ux,uy)||1;
+    ux/=ul; uy/=ul;
+    var vx=Oc[0]-Pa[0], vy=Oc[1]-Pa[1], dot=vx*ux+vy*uy;
+    Oc=[Pa[0]+2*dot*ux-vx, Pa[1]+2*dot*uy-vy];
+  }
+  var a0=Math.atan2(Pa[1]-Oc[1],Pa[0]-Oc[0]);
+  var d=Math.atan2(Pb[1]-Oc[1],Pb[0]-Oc[0])-a0;
+  while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  var N=19,p='M'+Pa[0].toFixed(2)+','+Pa[1].toFixed(2);
+  for(var i=1;i<=N;i++){var a=a0+d*i/N;
+    p+=' L'+(Oc[0]+r*Math.cos(a)).toFixed(2)+','+(Oc[1]+r*Math.sin(a)).toFixed(2);}
+  return p;
+}
+
+/* draw a full board: tiles = [{cell,arcs}], loops = [{arcs,area}] */
+function drawBoard(svg,tiles,loops,opts){
+  opts=opts||{};
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  svg.setAttribute('viewBox','0 0 '+GEO.W+' '+GEO.H);
+  var loopOf={}, enclosed={};
+  (loops||[]).forEach(function(lp,li){
+    lp.arcs.forEach(function(a){loopOf[a[0]+'-'+Math.min(a[1],a[2])+'-'+Math.max(a[1],a[2])]=li;});
+    (lp.cells||[]).forEach(function(c){enclosed[c]=1;});
+  });
+  var filled={}; (tiles||[]).forEach(function(t){filled[t.cell]=1;});
+  CELLS.forEach(function(c){
+    var cl='cellh'+(filled[c.idx]?'':' empty')+(enclosed[c.idx]?' encl':'');
+    svg.appendChild(el('polygon',{points:hexPts(c.c[0],c.c[1]),'class':cl}));
+  });
+  (tiles||[]).forEach(function(t){
+    var c=CELLS[t.cell];
+    t.arcs.forEach(function(pr){
+      var key=t.cell+'-'+Math.min(pr[0],pr[1])+'-'+Math.max(pr[0],pr[1]);
+      var li=loopOf[key], inLoop=(li!==undefined);
+      var cl='arc'+(inLoop?' loop':(opts.dimRuns?' dim':''));
+      var p=el('path',{d:arcPath(c.c[0],c.c[1],pr[0],pr[1],opts.bad),'class':cl});
+      if(inLoop) p.setAttribute('style','stroke:'+(opts.loopColor?opts.loopColor(li):css('--amber-bright')));
+      svg.appendChild(p);
+    });
+  });
+}
+
+/* ══ 1 · recorded game scrubber ══════════════════════════════════ */
+(function(){
+  var G=HT.game; if(!G) return;
+  var svg=document.getElementById('gboard'), scrub=document.getElementById('g-scrub'),
+      play=document.getElementById('g-play'), lbl=document.getElementById('g-move'),
+      s0=document.getElementById('g-s0'), s1=document.getElementById('g-s1');
+  // the recorded pack uses its own layout box; adopt it for this widget only
+  var W=G.W,H=G.H,C=G.cells;
+  function draw(n){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    var cur=n>0?G.steps[n-1]:null, loops=cur?cur.loops:[];
+    var loopOf={},encl={};
+    loops.forEach(function(lp){
+      lp.arcs.forEach(function(a){loopOf[a[0]+'-'+Math.min(a[1],a[2])+'-'+Math.max(a[1],a[2])]=lp.owner;});
+      (lp.cells||[]).forEach(function(c){encl[c]=1;});
+    });
+    var placed={}; for(var i=0;i<n;i++)placed[G.steps[i].cell]=G.steps[i];
+    C.forEach(function(c){
+      svg.appendChild(el('polygon',{points:hexPts(c.center[0],c.center[1]),
+        'class':'cellh'+(placed[c.idx]?'':' empty')+(encl[c.idx]?' encl':'')}));
+    });
+    Object.keys(placed).forEach(function(k){
+      var st=placed[k], c=C[st.cell];
+      st.arcs.forEach(function(pr){
+        var key=st.cell+'-'+Math.min(pr[0],pr[1])+'-'+Math.max(pr[0],pr[1]);
+        var owner=loopOf[key];
+        var cl='arc'+(owner!==undefined?' loop '+(owner===0?'a':'b'):' dim');
+        svg.appendChild(el('path',{d:arcPath(c.center[0],c.center[1],pr[0],pr[1]),'class':cl}));
+      });
+    });
+    lbl.textContent='move '+n;
+    var sc=cur?cur.score:[0,0]; s0.textContent=sc[0]; s1.textContent=sc[1];
+  }
+  var n=0,timer=null;
+  function set(v){n=Math.max(0,Math.min(37,v));scrub.value=n;draw(n);}
+  scrub.addEventListener('input',function(){set(+scrub.value);});
+  play.addEventListener('click',function(){
+    if(timer){clearInterval(timer);timer=null;play.textContent='Play';return;}
+    if(n>=37)set(0);
+    play.textContent='Pause';
+    timer=setInterval(function(){ if(n>=37){clearInterval(timer);timer=null;play.textContent='Play';return;} set(n+1); },260);
+  });
+  draw(0);
+})();
+
+/* ══ 2 · tile explorer ═══════════════════════════════════════════ */
+(function(){
+  var row=document.getElementById('tilesrow'), hint=document.getElementById('t-hint');
+  if(!row) return;
+  var rots=[0,0,0,0,0];
+  var S=110, cx=S/2, cy=S/2;
+  function card(i){
+    var t=HT.tiles[i];
+    var d=document.createElement('div');
+    d.className='tilecard'+(i===0?' sel':'');
+    d.innerHTML='<div class="nm">Tile '+i+'</div>';
+    var svg=el('svg',{viewBox:'0 0 '+S+' '+S});
+    d.appendChild(svg);
+    var sp=document.createElement('div'); sp.className='sp';
+    sp.textContent='spans '+t.spans.join('·');
+    var rc=document.createElement('div'); rc.className='rc'+(t.orbit===1?' one':'');
+    rc.textContent=t.orbit+(t.orbit===1?' rotation':' rotations');
+    d.appendChild(sp); d.appendChild(rc);
+    function paint(){
+      while(svg.firstChild)svg.removeChild(svg.firstChild);
+      // local hex scaled to the card
+      var k=(S*0.42)/R;
+      var pts=[];for(var j=0;j<6;j++){var a=(30+60*j)*Math.PI/180;
+        pts.push((cx+R*k*Math.cos(a)).toFixed(1)+','+(cy+R*k*Math.sin(a)).toFixed(1));}
+      svg.appendChild(el('polygon',{points:pts.join(' '),'class':'cellh'}));
+      t.rots[rots[i]].forEach(function(pr){
+        var save=[EO[pr[0]],EO[pr[1]]];
+        // scale the edge offsets to the card without mutating the shared table
+        var oldEO=EO; EO=EO.map(function(o){return [o[0]*k,o[1]*k];});
+        var p=arcPath(cx,cy,pr[0],pr[1]);
+        EO=oldEO;
+        svg.appendChild(el('path',{d:p,'class':'arc',style:'stroke:'+css('--amber')}));
+      });
+    }
+    d.addEventListener('click',function(){
+      rots[i]=(rots[i]+1)%6; paint();
+      row.querySelectorAll('.tilecard').forEach(function(n){n.classList.remove('sel');});
+      d.classList.add('sel');
+      hint.textContent='tile '+i+' · rotation '+rots[i]+(t.orbit===1?' — looks identical':'');
+    });
+    paint();
+    return d;
+  }
+  for(var i=0;i<5;i++) row.appendChild(card(i));
+})();
+
+/* ══ 3 · deck comparison ═════════════════════════════════════════ */
+(function(){
+  var btn=document.getElementById('d-roll'); if(!btn) return;
+  var su=document.getElementById('dboardU'), st=document.getElementById('dboardT');
+  var nu=document.getElementById('dU-loops'), nt=document.getElementById('dT-loops');
+  var iu=0, it=0;
+  function shade(li){ var c=[css('--amber-bright'),css('--terra'),css('--sage'),css('--mauve'),css('--steel-bright')];
+    return c[li%c.length]; }
+  function show(){
+    var U=HT.samples.uniform[iu%HT.samples.uniform.length];
+    var T=HT.samples.tuned[it%HT.samples.tuned.length];
+    drawBoard(su,U.tiles,U.loops,{dimRuns:true,loopColor:shade});
+    drawBoard(st,T.tiles,T.loops,{dimRuns:true,loopColor:shade});
+    nu.textContent=U.loops.length; nt.textContent=T.loops.length;
+  }
+  btn.addEventListener('click',function(){iu++;it++;show();});
+  var d=HT.decks;
+  document.getElementById('dU-mean').textContent=d.uniform_r3.mean_loops.toFixed(2);
+  document.getElementById('dT-mean').textContent=d.tuned_r3.mean_loops.toFixed(2);
+  document.getElementById('dU-zero').textContent=(d.uniform_r3.p_zero*100).toFixed(1)+'%';
+  document.getElementById('dT-zero').textContent=(d.tuned_r3.p_zero*100).toFixed(1)+'%';
+  show();
+})();
+
+/* ══ 4 · loop-length histogram ═══════════════════════════════════ */
+(function(){
+  var svg=document.getElementById('hist'); if(!svg) return;
+  var h=HT.decks.tuned_r3.len_hist;
+  var keys=Object.keys(h).map(Number).sort(function(a,b){return a-b;}).slice(0,9);
+  var tot=Object.keys(h).reduce(function(s,k){return s+h[k];},0);
+  document.getElementById('h-tot').textContent=tot.toLocaleString()+' loops';
+  var W=640,H=230,pad={l:44,r:12,t:14,b:34};
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var max=Math.max.apply(null,keys.map(function(k){return h[k];}));
+  var bw=(W-pad.l-pad.r)/keys.length;
+  keys.forEach(function(k,i){
+    var v=h[k], bh=(H-pad.t-pad.b)*(v/max);
+    var x=pad.l+i*bw+bw*0.16, y=H-pad.b-bh, w=bw*0.68;
+    svg.appendChild(el('rect',{x:x,y:y,width:w,height:bh,rx:2,
+      fill: i===0?css('--coral'):css('--steel'), opacity: i===0?0.95:0.75}));
+    svg.appendChild(el('text',{x:x+w/2,y:H-pad.b+16,'text-anchor':'middle',
+      'font-size':11,fill:css('--text-muted')})).textContent=k;
+    var t=el('text',{x:x+w/2,y:y-5,'text-anchor':'middle','font-size':10,
+      fill:i===0?css('--coral'):css('--text-muted')});
+    t.textContent=(100*v/tot).toFixed(v/tot<0.01?1:0)+'%';
+    svg.appendChild(t);
+  });
+  var lab=el('text',{x:pad.l,y:H-6,'font-size':11,fill:css('--text-muted')});
+  lab.textContent='arcs per loop →'; svg.appendChild(lab);
+})();
+
+/* ══ 5 · methods scrolly chart ═══════════════════════════════════ */
+(function(){
+  var svg=document.getElementById('methods'); if(!svg) return;
+  var METHODS=[
+    {name:'Denial heuristic',   win:0.50, note:'a coin flip',       col:'--steel'},
+    {name:'Self-play RL',       win:0.004,note:'0.4%',              col:'--coral'},
+    {name:'RL vs greedy',       win:0.086,note:'8.6% plateau',      col:'--terra'},
+    {name:'Rollout search',     win:1.00, note:'50 / 50',           col:'--sage'}
+  ];
+  var W=460,H=400,pad={l:132,r:52,t:44,b:44};
+  var iw=W-pad.l-pad.r, rowH=(H-pad.t-pad.b)/METHODS.length;
+  function x(v){return pad.l+v*iw;}
+  var shown=-1;
+  function draw(upto){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    var ttl=el('text',{x:pad.l,y:20,'font-size':11,fill:css('--text-muted'),
+      'letter-spacing':'.14em'}); ttl.textContent='WIN RATE vs GREEDY'; svg.appendChild(ttl);
+    // parity line
+    svg.appendChild(el('line',{x1:x(.5),x2:x(.5),y1:pad.t-10,y2:H-pad.b+6,
+      stroke:css('--text-muted'),'stroke-dasharray':'3 4','stroke-opacity':.6}));
+    var pl=el('text',{x:x(.5),y:H-pad.b+22,'text-anchor':'middle','font-size':10,
+      fill:css('--text-muted')}); pl.textContent='parity'; svg.appendChild(pl);
+    [0,1].forEach(function(v){
+      var t=el('text',{x:x(v),y:H-pad.b+22,'text-anchor':'middle','font-size':10,
+        fill:css('--text-muted')}); t.textContent=(v*100)+'%'; svg.appendChild(t);
+    });
+    METHODS.forEach(function(m,i){
+      var on=i<=upto, y=pad.t+rowH*i+rowH/2;
+      var g=el('g',{opacity:on?1:0.18});
+      var lb=el('text',{x:pad.l-14,y:y+4,'text-anchor':'end','font-size':11.5,
+        fill:on?css('--text-bright'):css('--text-muted')});
+      lb.textContent=m.name; g.appendChild(lb);
+      g.appendChild(el('line',{x1:pad.l,x2:x(1),y1:y,y2:y,stroke:css('--border')}));
+      if(on){
+        var w=Math.max(2,x(m.win)-pad.l);
+        g.appendChild(el('rect',{x:pad.l,y:y-9,width:w,height:18,rx:3,
+          fill:css(m.col),opacity:.85}));
+        var nt=el('text',{x:x(m.win)+8,y:y+4,'font-size':11,fill:css(m.col)});
+        nt.textContent=m.note; g.appendChild(nt);
+      }
+      svg.appendChild(g);
+    });
+  }
+  draw(-1);
+  var steps=[].slice.call(document.querySelectorAll('.step'));
+  function update(){
+    // clientHeight, not innerHeight: a backgrounded/hidden pane reports
+    // innerHeight 0, which would pin the trigger line to the top of the
+    // document and leave the chart stuck on its first state.
+    var vh=document.documentElement.clientHeight||window.innerHeight||700;
+    var line=vh*0.55, best=-1;
+    steps.forEach(function(s,i){
+      var r=s.getBoundingClientRect();
+      if(r.top<=line) best=i;                      // last step to cross the line
+      s.classList.toggle('active', r.top<=line && r.bottom>line);
+    });
+    if(best!==shown){shown=best;draw(best);}
+  }
+  addEventListener('scroll',update,{passive:true});
+  addEventListener('resize',update);
+  update();
+})();
+
+/* ══ 6 · sweep table ═════════════════════════════════════════════ */
+(function(){
+  var tb=document.querySelector('#sweep tbody'); if(!tb) return;
+  var by='win';
+  function render(){
+    var rows=HT.sweep.slice().sort(function(a,b){
+      return by==='sec' ? a.sec-b.sec : b[by]-a[by];
+    });
+    tb.innerHTML='';
+    var maxw=1;
+    rows.forEach(function(r){
+      var tr=document.createElement('tr');
+      if(r.label==='medium') tr.className='hi';
+      var name=r.label?r.label.charAt(0).toUpperCase()+r.label.slice(1):'K='+r.k+', d='+r.depth;
+      var sec=r.sec>=1?r.sec.toFixed(0)+' s':(r.sec*1000).toFixed(0)+' ms';
+      tr.innerHTML='<td>'+name+'</td><td>'+r.k+'</td><td>'+(r.depth||'–')+'</td>'+
+        '<td><span class="bar" style="width:'+(r.win*54).toFixed(0)+'px"></span> '+
+        (r.win*100).toFixed(1)+'%</td>'+
+        '<td>'+(r.margin>0?'+':'')+r.margin.toFixed(2)+'</td><td>'+sec+'</td>';
+      tb.appendChild(tr);
+    });
+    document.getElementById('sw-by').textContent =
+      by==='win'?'win rate':(by==='margin'?'margin':'cost');
+  }
+  document.querySelectorAll('#fig-sweep [data-sort]').forEach(function(b){
+    b.addEventListener('click',function(){
+      by=b.getAttribute('data-sort');
+      document.querySelectorAll('#fig-sweep [data-sort]').forEach(function(o){o.classList.remove('on');});
+      b.classList.add('on');
+      render();
+    });
+  });
+  document.querySelector('#fig-sweep [data-sort="win"]').classList.add('on');
+  render();
+})();
+
+/* ══ 7 · arc bug demo ════════════════════════════════════════════ */
+(function(){
+  var svg=document.getElementById('arcdemo'); if(!svg) return;
+  var cap=document.getElementById('arc-cap');
+  var CAPS={
+    good:'Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline. Curves meet cleanly at every shared edge, so chains flow across cells.',
+    bad:'The same 37 tiles, same endpoints, same radii — drawn from the reflected centre. Every arc now bulges the wrong way, nothing meets tangentially at the edges, and the pattern comes apart.'
+  };
+  // A full board, because that's where the bug actually shows: a single arc
+  // drawn from the wrong centre looks merely odd, but across 111 arcs the
+  // curves stop meeting tangentially at the edges and the pattern visibly
+  // comes apart.
+  var mode='good', BOARD=HT.samples.tuned[0];
+  function draw(){
+    drawBoard(svg,BOARD.tiles,null,{
+      bad: mode==='bad',
+      loopColor:function(){return css('--amber');}
+    });
+    [].forEach.call(svg.querySelectorAll('path'),function(p){
+      p.setAttribute('style','stroke:'+(mode==='bad'?css('--coral'):css('--amber')));
+    });
+  }
+  document.querySelectorAll('#fig-arc .toggle').forEach(function(b){
+    b.addEventListener('click',function(){
+      mode=b.getAttribute('data-arc');
+      document.querySelectorAll('#fig-arc .toggle').forEach(function(o){o.classList.remove('active');});
+      b.classList.add('active');
+      cap.textContent=CAPS[mode];
+      draw();
+    });
+  });
+  draw();
+})();
+
+/* ══ 8 · hero field ══════════════════════════════════════════════ */
+(function(){
+  var svg=document.getElementById('herofield'); if(!svg) return;
+  var TILE=[HT.tiles[0],HT.tiles[2]];
+  var paths=[], timer=null, S=0;
+
+  function arcH(cx,cy,ea,eb,scaled){
+    var save=EO; EO=scaled; var p=arcPath(cx,cy,ea,eb); EO=save; return p;
+  }
+  function randTile(){
+    var t=TILE[Math.random()<0.34?0:1];
+    return t.rots[(Math.random()*6)|0];
+  }
+  function stroke(d){
+    return el('path',{d:d,fill:'none',stroke:css('--amber'),'stroke-width':2.6,
+      'stroke-linecap':'round','stroke-opacity':.85});
+  }
+
+  function build(){
+    // measure the element rather than the window: at first paint the pane can
+    // report innerWidth 0, which silently collapses the lattice to a few cells.
+    var box=svg.getBoundingClientRect();
+    var w=Math.round(box.width)||document.documentElement.clientWidth||window.innerWidth||1200;
+    var h=Math.round(box.height)||document.documentElement.clientHeight||window.innerHeight||700;
+    S=Math.max(40,Math.min(72,w/18));                 // apothem
+    var EOh=EO.map(function(o){return [o[0]/(L/2)*S, o[1]/(L/2)*S];});
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    paths=[];
+    svg.setAttribute('viewBox','0 0 '+w+' '+h);
+    svg.setAttribute('preserveAspectRatio','xMidYMid slice');
+    var dy=Math.sqrt(3)*S, rows=Math.ceil(h/dy)+3;
+    for(var r=-2;r<rows;r++){
+      var y=dy*r;
+      // x = 2*S*q + S*r; solve for the q range that covers [-2S, w+2S]
+      var q0=Math.floor((-2*S-S*r)/(2*S))-1, q1=Math.ceil((w+2*S-S*r)/(2*S))+1;
+      for(var q=q0;q<=q1;q++){
+        var x=2*S*q+S*r;
+        var g=el('g',{});
+        randTile().forEach(function(pr){g.appendChild(stroke(arcH(x,y,pr[0],pr[1],EOh)));});
+        svg.appendChild(g);
+        paths.push({g:g,x:x,y:y,eo:EOh});
+      }
+    }
+  }
+
+  function tick(){
+    for(var i=0;i<3;i++){
+      var p=paths[(Math.random()*paths.length)|0]; if(!p) continue;
+      while(p.g.firstChild)p.g.removeChild(p.g.firstChild);
+      p.g.style.transition='opacity .9s'; p.g.style.opacity='.15';
+      randTile().forEach(function(pr){p.g.appendChild(stroke(arcH(p.x,p.y,pr[0],pr[1],p.eo)));});
+      (function(g){setTimeout(function(){g.style.opacity='1';},40);})(p.g);
+    }
+  }
+
+  function start(){ if(timer)clearInterval(timer); if(!RM)timer=setInterval(tick,900); }
+  function redraw(){ build(); start(); }
+
+  // wait a frame: measuring before first layout gives a tiny box, which would
+  // set a tiny viewBox and flash the pattern at ~10x scale before correcting.
+  requestAnimationFrame(redraw);
+  addEventListener('load',redraw);
+  var rt; addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(redraw,220);});
+})();
+
+})();
+</script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 # Hex Truchet
 
 A hex-grid Truchet-tile placement game, developed from geometry research
-through a trained bot to a playable Godot game.
+through bot design to a playable Godot game.
+
+**▶ [Play it in your browser](https://orbitope.itch.io/hex-truchet)**
 
 Players alternate placing hexagonal tiles carrying curved paths onto a
 shared board. Adjacent tile edges connect, and closing a loop scores points
@@ -10,12 +12,18 @@ whether a simple greedy strategy is already close to optimal play, or
 whether there's real strategic depth to exploit — see
 `hex_truchet/spec.md` for the full rules.
 
+`docs/` holds the long-form write-up as an interactive article — the
+deck-tuning findings, three failed attempts to beat greedy with learning,
+and the search bot that finally did it. Every board and figure in it is
+generated from the real engine by `viz/build_article_data.py`; open
+`docs/index.html` over a local server (it fetches `data.js`).
+
 ## Play it
 
-The Godot game (`hextruchet-godot/`) is the playable deliverable, with
-hot-seat, vs-bot, and replay modes.
+The playable build is on itch.io: **https://orbitope.itch.io/hex-truchet**
 
-To try the web build locally:
+The Godot project (`hextruchet-godot/`) has hot-seat, vs-bot, and replay
+modes. To run the web build locally:
 
 ```bash
 cd hextruchet-godot/build/web
