@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 
 Palette="*res://autoload/Palette.gd"
 
-McpInteractionServer="*res://scripts/mcp_interaction_server.gd"
+DevBridge="*res://autoload/DevBridge.gd"
 
 [display]
 

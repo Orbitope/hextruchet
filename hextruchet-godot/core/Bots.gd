@@ -63,7 +63,53 @@ func _init(seed_value: int = 0) -> void:
 		rng.randomize()
 
 
-## Pick a move for the acting player.
+## Pick a move, yielding to the engine between candidates so the frame never
+## blocks for the whole search.
+##
+## Measured on desktop: Medium ~37ms (fine synchronously), but Hard reaches
+## ~970ms mid-game -- a visibly frozen second, and WASM is slower still. The
+## rollouts are K independent simulations, so yielding between them costs
+## nothing and bounds each blocking chunk to roughly one rollout.
+##
+## `tree` is the caller's SceneTree; pass null to fall back to the blocking path.
+func choose_async(state: GameState, difficulty: Difficulty, tree: SceneTree) -> Vector3i:
+	var cfg: Dictionary = PRESETS[difficulty]
+	var k: int = int(cfg["k"])
+	var depth: int = int(cfg["depth"])
+	var slip: float = float(cfg["slip"])
+
+	if tree == null or k <= 1:
+		return choose(state, difficulty)
+
+	var actions: Array[Vector3i] = state.legal_actions()
+	if actions.is_empty():
+		return Vector3i(-1, -1, -1)
+
+	var ranked: Array = _rank_by_gain(state, actions)
+	if ranked.size() == 1 or (slip > 0.0 and rng.randf() < slip):
+		return _best_or_random(ranked, state)
+
+	var top_k: int = mini(k, ranked.size())
+	var best_action: Vector3i = ranked[0]["action"]
+	var best_margin: int = WORST_MARGIN
+	var seat: int = state.current_player
+
+	for i in top_k:
+		var action: Vector3i = ranked[i]["action"]
+		var sim: GameState = state.clone()
+		sim.apply(action.x, action.y, action.z)
+		_rollout(sim, depth)
+		var margin: int = _margin_for(sim, seat)
+		if margin > best_margin:
+			best_margin = margin
+			best_action = action
+		await tree.process_frame
+
+	return best_action
+
+
+## Pick a move for the acting player. Blocking; prefer choose_async in the
+## interactive game.
 func choose(state: GameState, difficulty: Difficulty) -> Vector3i:
 	var cfg: Dictionary = PRESETS[difficulty]
 	var k: int = int(cfg["k"])

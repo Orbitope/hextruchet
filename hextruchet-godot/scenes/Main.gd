@@ -410,9 +410,10 @@ func _take_bot_turn() -> void:
 	board.show_ghost = false
 	status_label.text = "%s is thinking..." % Bots.difficulty_name(bot_difficulty)
 	await get_tree().process_frame
-	await get_tree().process_frame
 
-	var action: Vector3i = bots.choose(state, bot_difficulty)
+	# choose_async yields between rollout candidates -- without it, Hard blocks
+	# the frame for ~1s mid-game on desktop (worse on WASM).
+	var action: Vector3i = await bots.choose_async(state, bot_difficulty, get_tree())
 	bot_thinking = false
 	if action.x < 0:
 		return
