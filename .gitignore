@@ -25,6 +25,7 @@ venv/
 *.md
 !README.md
 !docs/*.md
+!docs/promo/*.md
 
 # Local-only browser-preview scaffold (wraps viewer.html's body in a full
 # HTML doc for local testing) -- viewer.html itself is the real deliverable.
