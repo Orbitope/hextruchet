@@ -18,6 +18,15 @@
 <meta property="og:title" content="Hex Truchet — Three Ways to Fail to Beat the Obvious Move">
 <meta property="og:description" content="Designing a hex tile game, and what it took to beat the most obvious way to play it.">
 <meta property="og:type" content="article">
+<meta property="og:url" content="https://orbitope.com/hextruchet/">
+<meta property="og:image" content="https://orbitope.com/hextruchet/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://orbitope.com/hextruchet/">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Hex Truchet — Three Ways to Fail to Beat the Obvious Move", "description": "Designing a hex tile game, and what it took to beat the most obvious way to play it.", "image": "https://orbitope.com/hextruchet/og.png", "url": "https://orbitope.com/hextruchet/", "datePublished": "2026-07-01", "author": {"@type": "Person", "name": "Matthew Burke"}, "publisher": {"@type": "Organization", "name": "Orbitope"}}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -201,6 +210,10 @@
   .caveats b{color:var(--text-primary);font-weight:500}
   .foot{max-width:680px;margin:0 auto;padding:4vh 24px 10vh;text-align:center;
     font-size:11px;color:var(--text-muted);letter-spacing:.1em}
+
+/* Inline links to sibling Orbitope articles. Scoped to its own class because these pages do not all style a bare <a>. */
+.xref{color:var(--amber-bright,#E8C068);text-decoration:none;border-bottom:1px solid rgba(232,192,104,.38);transition:border-color .2s}
+.xref:hover{border-bottom-color:var(--amber-bright,#E8C068)}
 </style>
 </head>
 <body>
@@ -417,7 +430,7 @@
 <section class="beat">
   <div class="eyebrow">The last problem</div>
   <h2>Then I had to teach it to lose.</h2>
-  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves — which makes search strength <b>useless as a difficulty dial</b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
+  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves — which makes search strength <b><a class="xref" href="https://orbitope.com/gridlocked/">useless as a difficulty dial</a></b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
   <p>So difficulty here isn't a search parameter. It's a <b class="amber">greedy-slip</b>: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip at all.</p>
   <p>It's a better handicap axis than depth because it degrades the bot's <b>judgment</b> rather than its <b>reach</b>. A slipping bot still plays coherently — it just periodically fails to see the trap it's walking into, which is a recognizably human way to lose.</p>
 </section>
