@@ -39,7 +39,82 @@
     --mauve:#9A7AB0; --sage:#7D9A6A; --terra:#C47A5A; --coral:#FF5E3A;
     --text-bright:#EDE8DC; --text-primary:#C8C2B4; --text-muted:#6A6358;
     --font-display:'Rajdhani',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  
+    --fig-bg:#0d0c07; --slate:#3f4a56; --border-strong:#3d3a30;
   }
+
+  /* ── Accessibility mode ────────────────────────────────────────────────
+     Engaged by the control in the corner, or automatically under
+     `prefers-contrast: more`. Three things change, in the order they
+     actually matter to a reader:
+
+       1. the data-series tokens move to a scale separated by LIGHTNESS as
+          well as hue. The house scale separates by hue alone, so sage and
+          terra land 20.4 apart under simulated deuteranopia — the same
+          colour, for the ~5% of men who have it.
+       2. hairlines get a 2px floor and decorative opacity is dropped.
+          Presentation attributes lose to any CSS declaration, so this
+          reaches the stroke widths figure JS sets inline, without a redraw.
+       3. where a figure encodes category by colour alone, it gains a
+          second channel — shape, or a letter.
+
+     (3) is what does the real work. Colour alone cannot be made
+     colour-blind-safe at five-plus categories: any set of hues at one
+     lightness collapses for somebody. The palette only buys margin, which
+     is why these hues can stay in the house families rather than going
+     electric to chase a separation number.                              */
+  html[data-a11y]{
+    --amber:#D9B45F; --amber-bright:#F2CF79;
+    --steel:#79BCF3; --steel-bright:#A8D2F7;
+    --mauve:#B563C6; --sage:#668442; --terra:#DB8F6D; --coral:#D45F77;
+    --slate:#4F9D99;
+    --text-muted:#A39B8C;      /* house var(--text-muted) is 3.21:1 — under the floor */
+    --text-primary:#DED8CA;
+    --border:#6E6959;          /* house var(--border) is 1.29:1 */
+    --border-strong:#837D6B;
+    --stroke-floor:2px;
+    --mark-opacity:1;
+  }
+  /* A blanket stroke-width would also thin the strokes that are deliberately
+     heavy. CSS cannot take a max against a presentation attribute, so raise
+     the thin values by name. */
+  html[data-a11y] .fig svg [stroke-width="1"],
+  html[data-a11y] .fig svg [stroke-width="1.5"],
+  html[data-a11y] .fig svg [stroke-width="0.5"],
+  html[data-a11y] .fig svg [stroke-width=".5"],
+  html[data-a11y] figure svg [stroke-width="1"],
+  html[data-a11y] figure svg [stroke-width="1.5"]{stroke-width:var(--stroke-floor)}
+  /* Decorative transparency halves effective contrast: a .72-opacity mark at
+     4.47:1 lands at 2.84:1, under the 3:1 floor for a graphic. */
+  html[data-a11y] figure svg [opacity]{opacity:var(--mark-opacity)}
+
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap;border:0}
+  .kbd-hint{font-size:10px;color:var(--text-muted);letter-spacing:.04em}
+
+  /* The control that turns on legibility must not itself be the least legible
+     thing on the page. 10.7:1 resting, 44px target, first tab stop. */
+  .a11y-btn{position:fixed;top:14px;right:14px;z-index:60;display:inline-flex;align-items:center;
+    justify-content:center;gap:7px;min-height:44px;
+    font-family:var(--font-display,sans-serif);font-weight:600;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;background:rgba(26,24,18,.92);backdrop-filter:blur(6px);
+    color:var(--text-primary);border:1px solid var(--border-strong,#3d3a30);border-radius:4px;
+    padding:7px 13px;cursor:pointer;transition:.2s}
+  .a11y-btn:hover{color:var(--text-bright);border-color:var(--amber)}
+  .a11y-btn:focus-visible{outline:3px solid var(--amber-bright);outline-offset:3px}
+  .a11y-btn svg{flex:none}
+  /* State is not carried by colour. Amber-vs-bone is invisible to exactly the
+     readers this control exists for, so on/off is spelled out in the label and
+     the icon flips fill as well. */
+  .a11y-btn .state{font-weight:700}
+  .a11y-btn .state::after{content:"OFF"}
+  .a11y-btn[aria-pressed="true"]{color:var(--amber-bright);border-color:var(--amber);
+    background:rgba(196,154,60,.16);box-shadow:inset 0 0 0 1px var(--amber)}
+  .a11y-btn[aria-pressed="true"] .state::after{content:"ON"}
+  .a11y-btn[aria-pressed="true"] .half{transform:rotate(180deg);transform-origin:12px 12px}
+  @media(max-width:560px){.a11y-btn .txt{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip-path:inset(50%)}.a11y-btn{min-width:44px;padding:8px 10px}}
+
   html{scroll-behavior:smooth}
   @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   body{background:var(--void);color:var(--text-primary);font-family:var(--font-mono);
@@ -92,7 +167,7 @@
 
   /* ── figures ────────────────────────────────────────────────────── */
   .fig{max-width:940px;margin:34px auto;border:1px solid var(--border);border-radius:6px;
-    overflow:hidden;background:#0d0c07}
+    overflow:hidden;background:var(--fig-bg)}
   .fig.narrow{max-width:660px}
   .fig .cap{font-size:11px;color:var(--text-muted);padding:11px 16px;border-top:1px solid var(--border);letter-spacing:.03em}
   .wdg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;
@@ -110,7 +185,7 @@
   .btn:hover{color:var(--text-bright);border-color:var(--amber)}
   .btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .btn:disabled{opacity:.35;cursor:default}
-  .btn.on{color:#0d0c07;background:var(--amber);border-color:var(--amber)}
+  .btn.on{color:var(--fig-bg);background:var(--amber);border-color:var(--amber)}
   .toggle-row{display:flex;border-bottom:1px solid var(--border)}
   .toggle{flex:1;padding:12px 6px;font-family:var(--font-display);font-weight:600;font-size:12px;
     letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;background:transparent;
@@ -190,8 +265,8 @@
   table.t tr.hi .bar{background:var(--amber)}
   .tag{font-weight:500;letter-spacing:.1em;padding:2px 8px;border-radius:3px;font-size:10px;
     text-transform:uppercase;white-space:nowrap;font-family:var(--font-display)}
-  .tag.ok{color:#0d0c07;background:var(--sage)} .tag.no{color:#0d0c07;background:var(--coral)}
-  .tag.mid{color:#0d0c07;background:var(--amber)}
+  .tag.ok{color:var(--fig-bg);background:var(--sage)} .tag.no{color:var(--fig-bg);background:var(--coral)}
+  .tag.mid{color:var(--fig-bg);background:var(--amber)}
 
   /* ── outro ──────────────────────────────────────────────────────── */
   .outro{max-width:680px;margin:0 auto;padding:12vh 24px 6vh;text-align:center}
@@ -199,7 +274,7 @@
     color:var(--text-bright);margin-bottom:18px}
   .outro p{font-size:14px;color:var(--text-muted);margin-bottom:22px}
   .cta{display:inline-block;font-family:var(--font-display);font-weight:700;font-size:15px;
-    letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:#0d0c07;
+    letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--fig-bg);
     background:var(--amber);border-radius:5px;padding:14px 34px;transition:.2s}
   .cta:hover{background:var(--amber-bright)}
   .caveats{max-width:680px;margin:0 auto;padding:5vh 24px 2vh;font-size:12px;color:var(--text-muted);line-height:1.75}
@@ -217,6 +292,17 @@
 </style>
 </head>
 <body>
+<!-- orbitope:a11y-control — self-contained; move as one block. -->
+<button id="a11yBtn" class="a11y-btn" type="button" aria-pressed="false"
+        title="High-contrast, colour-blind-safe figures">
+  <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path class="half" d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"/>
+  </svg>
+  <span class="txt">Contrast</span><span class="state"></span>
+</button>
+
 <div class="progress" id="progress"></div>
 <div class="wrap">
 
@@ -245,13 +331,13 @@
     <span>A real recorded game · <b id="g-move">move 0</b> of 37</span>
     <span>closed loops tint <b style="color:var(--amber-bright)">amber</b> / <b style="color:var(--steel-bright)">steel</b> by who sealed them</span>
   </div>
-  <svg class="bsvg" id="gboard" style="max-width:420px;padding:14px 0"></svg>
+  <svg class="bsvg" id="gboard" role="img" aria-describedby="cap-1" aria-label="A recorded hex-Truchet game stepped move by move. Closed loops tint amber or steel by whoever sealed them." style="max-width:420px;padding:14px 0"></svg>
   <div class="wdg-foot">
     <span>score <b style="color:var(--amber-bright)" id="g-s0">0</b> — <b style="color:var(--steel-bright)" id="g-s1">0</b></span>
-    <span style="flex:1;min-width:140px"><input type="range" id="g-scrub" min="0" max="37" value="0" style="width:100%"></span>
+    <span style="flex:1;min-width:140px"><input type="range" id="g-scrub" min="0" max="37" value="0" style="width:100%" aria-label="Move number"></span>
     <button class="btn" id="g-play">Play</button>
   </div>
-  <div class="cap">Two greedy players alternate. Watch for the moment a long chain seals — the score jumps by the area it just captured, not by one.</div>
+  <figcaption class="cap" id="cap-1">Two greedy players alternate. Watch for the moment a long chain seals — the score jumps by the area it just captured, not by one.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 2 · FIVE TILES ═══════════════════ -->
@@ -265,7 +351,7 @@
 <figure class="fig reveal" id="fig-tiles">
   <div class="wdg-head"><span>Click a tile to rotate it</span><span id="t-hint">tile 0 · rotation 0</span></div>
   <div class="tiles-row" id="tilesrow"></div>
-  <div class="cap">Distinct rotations = the size of the tile's orbit under the rotation group. They sum to 15, which is where the five come from.</div>
+  <figcaption class="cap" id="cap-2">Distinct rotations = the size of the tile's orbit under the rotation group. They sum to 15, which is where the five come from.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 3 · THE DECK ═══════════════════ -->
@@ -281,7 +367,7 @@
   <div class="two">
     <div>
       <h4>Uniform · <b>all five tiles</b></h4>
-      <svg class="bsvg" id="dboardU" style="max-width:250px;padding:6px 0"></svg>
+      <svg class="bsvg" id="dboardU" role="img" aria-describedby="cap-3" aria-label="A board filled at random from the untuned deck, with closed loops highlighted and their enclosed cells tinted." style="max-width:250px;padding:6px 0"></svg>
       <div class="stats">
         <div><span class="v bad" id="dU-loops">–</span>loops here</div>
         <div><span class="v" id="dU-mean">0.70</span>mean of 2,000</div>
@@ -290,7 +376,7 @@
     </div>
     <div>
       <h4>Tuned · <b>12 × tile 0, 25 × tile 2</b></h4>
-      <svg class="bsvg" id="dboardT" style="max-width:250px;padding:6px 0"></svg>
+      <svg class="bsvg" id="dboardT" role="img" aria-describedby="cap-3" aria-label="A board filled at random from the tuned deck, with closed loops highlighted and their enclosed cells tinted." style="max-width:250px;padding:6px 0"></svg>
       <div class="stats">
         <div><span class="v good" id="dT-loops">–</span>loops here</div>
         <div><span class="v" id="dT-mean">4.19</span>mean of 2,000</div>
@@ -298,7 +384,7 @@
       </div>
     </div>
   </div>
-  <div class="cap">Closed loops are highlighted and their enclosed cells tinted. Every board is generated by the real engine; the means come from 2,000 trials of each.</div>
+  <figcaption class="cap" id="cap-3">Closed loops are highlighted and their enclosed cells tinted. Every board is generated by the real engine; the means come from 2,000 trials of each.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 4 · MINIMAL LOOPS ═══════════════════ -->
@@ -313,8 +399,8 @@
 
 <figure class="fig narrow reveal" id="fig-hist">
   <div class="wdg-head"><span>Loop length distribution · <b>tuned deck</b>, 2,000 boards</span><span id="h-tot"></span></div>
-  <svg id="hist" style="display:block;width:100%;padding:16px 8px 4px"></svg>
-  <div class="cap">Length is arcs per loop, always a multiple of three. The first bar is the minimal loop; everything to its right is where the game actually lives.</div>
+  <svg id="hist" role="img" aria-describedby="cap-4" aria-label="Distribution of loop length over 2,000 boards from the tuned deck. Length is arcs per loop, always a multiple of three." style="display:block;width:100%;padding:16px 8px 4px"></svg>
+  <figcaption class="cap" id="cap-4">Length is arcs per loop, always a multiple of three. The first bar is the minimal loop; everything to its right is where the game actually lives.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 5 · GREEDY SETUP ═══════════════════ -->
@@ -329,7 +415,7 @@
 <!-- ═══════════════════ SCROLLY ═══════════════════ -->
 <section class="scrolly">
   <div class="graphic-col">
-    <svg id="methods" viewBox="0 0 460 400"></svg>
+    <svg id="methods" role="img" aria-label="Four search methods compared, in the order they were tried, against how well each beat the obvious move." viewBox="0 0 460 400"></svg>
   </div>
   <div class="steps-col">
     <div class="step" data-step="0">
@@ -388,7 +474,7 @@
     <thead><tr><th>Config</th><th>K</th><th>Depth</th><th>Win vs greedy</th><th>Margin</th><th>Sec / move</th></tr></thead>
     <tbody></tbody>
   </table></div>
-  <div class="cap">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points — so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</div>
+  <figcaption class="cap" id="cap-5">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points — so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</figcaption>
 </figure>
 
 <section class="beat tight">
@@ -415,8 +501,8 @@
     <button class="toggle active" data-arc="good">Sampled points · correct</button>
     <button class="toggle" data-arc="bad">Reflected centre · the bug</button>
   </div>
-  <svg class="bsvg" id="arcdemo" style="max-width:380px;padding:16px 0"></svg>
-  <div class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline.</div>
+  <svg class="bsvg" id="arcdemo" role="img" aria-describedby="arc-cap" aria-label="A tangent-continuous arc sampled into nineteen explicit points and drawn as a polyline, next to the naive version." style="max-width:380px;padding:16px 0"></svg>
+  <figcaption class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline.</figcaption>
 </figure>
 
 <section class="beat tight">
@@ -446,7 +532,7 @@
       <tr><td>Hard</td><td>3</td><td>8</td><td>0%</td><td style="text-align:right"><span class="tag no">not being fair</span></td></tr>
     </tbody>
   </table></div>
-  <div class="cap">Expert (K=8, full rollout) exists in the codebase but never ships — at 29 seconds a move it's a research instrument, not an opponent.</div>
+  <figcaption class="cap" id="cap-7">Expert (K=8, full rollout) exists in the codebase but never ships — at 29 seconds a move it's a research instrument, not an opponent.</figcaption>
 </figure>
 
 <section class="beat tight">
@@ -477,6 +563,27 @@
 </div>
 
 </div>
+
+<!-- orbitope:a11y-control script — pairs with the button above. -->
+<script>
+(function(){
+  var KEY='orbitope-a11y', root=document.documentElement, btn=document.getElementById('a11yBtn');
+  function stored(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function apply(on,persist){
+    if(on) root.setAttribute('data-a11y',''); else root.removeAttribute('data-a11y');
+    if(btn) btn.setAttribute('aria-pressed',on?'true':'false');
+    if(persist){ try{ localStorage.setItem(KEY,on?'on':'off'); }catch(e){} }
+    document.dispatchEvent(new CustomEvent('a11ychange',{detail:{on:on}}));
+  }
+  // No media query reports colour blindness, so prefers-contrast is only a
+  // hint. An explicit choice always wins, and it is shared across the site
+  // because every article sits on the one origin.
+  var pref=stored();
+  var auto=window.matchMedia&&window.matchMedia('(prefers-contrast: more)').matches;
+  apply(pref?pref==='on':!!auto,false);
+  if(btn) btn.addEventListener('click',function(){ apply(!root.hasAttribute('data-a11y'),true); });
+})();
+</script>
 
 <script src="data.js"></script>
 <script>
