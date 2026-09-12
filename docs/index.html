@@ -314,7 +314,7 @@
   <div class="hero-in">
     <div class="kicker">Hex Truchet · game design &amp; search</div>
     <h1>Three ways to fail to beat <span class="accent">the obvious move</span>.</h1>
-    <p class="sub">A tile game where the thing you score — a closed loop — belongs to the board rather than to either player. Finding a deck worth playing took <b>2,000 simulated boards</b>. Beating the dumbest possible strategy took <b>three failed attempts</b> and then about thirty lines of code with no learning in it at all.</p>
+    <p class="sub">A tile game where the thing you score, a closed loop, belongs to the board rather than to either player. Finding a deck worth playing took <b>2,000 simulated boards</b>. Beating the dumbest possible strategy took <b>three failed attempts</b> and then about thirty lines of code with no learning in it at all.</p>
     <div class="scroll-cue">scroll</div>
   </div>
 </header>
@@ -322,8 +322,8 @@
 <!-- ═══════════════════ 1 · THE GAME ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">First, the game</div>
-  <h2>Arcs connect. Eventually one bites its own tail.</h2>
-  <p>A Truchet tile is a square with a decoration that isn't rotationally symmetric — two quarter-circles, say. Tile a plane with them at random angles and the arcs chain across tile boundaries into long meandering curves. It's a century-old idea that still shows up in generative art, and the appeal is that the pattern is entirely emergent: no single tile knows anything about the curve it belongs to.</p>
+  <h2>Arcs chain across tiles and eventually close into a loop.</h2>
+  <p>A Truchet tile is a square with a decoration that isn't rotationally symmetric, two quarter-circles, say. Tile a plane with them at random angles and the arcs chain across tile boundaries into long meandering curves. It's a century-old idea that still shows up in generative art, and the appeal is that the pattern is entirely emergent. No single tile carries any information about the curve it belongs to.</p>
   <p>Hex Truchet is what happens if you put that on a hex grid and make two people fight over it.</p>
   <p>Every cell is a hexagon with six edges, and every tile is <b>three arcs pairing those six edges up</b>. Place a tile beside an existing one and the arcs join across the shared edge. Keep going and eventually a chain closes into a loop. <b class="amber">Closing a loop scores you the number of cells it encloses.</b> Board is 37 cells, game is 37 turns, highest score wins.</p>
 </section>
@@ -339,15 +339,15 @@
     <span style="flex:1;min-width:140px"><input type="range" id="g-scrub" min="0" max="37" value="0" style="width:100%" aria-label="Move number"></span>
     <button class="btn" id="g-play">Play</button>
   </div>
-  <figcaption class="cap" id="cap-1">Two greedy players alternate. Watch for the moment a long chain seals — the score jumps by the area it just captured, not by one.</figcaption>
+  <figcaption class="cap" id="cap-1">Two greedy players alternate. Watch for the moment a long chain seals. The score jumps by the area it just captured, not by one.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 2 · FIVE TILES ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">The vocabulary</div>
   <h2>There are only five tiles.</h2>
-  <p>Six edges can be paired up 15 ways. Quotient those by rotation and you're left with <b>five distinct tiles</b> — a small enough alphabet to learn in a minute, with real texture between the extremes. Tile&nbsp;0 curls everything back on itself. Tile&nbsp;4 sends everything straight across and never turns.</p>
-  <p>That last column below isn't trivia. <b class="coral">Tile 4 looks identical in all six rotations</b>, so in the finished game, pressing the rotate key on a straight-through tile does nothing, six times in a row — which reads to a player as a broken control. The UI has to skip aliased rotations. It's the sort of thing you only find by holding the thing in your hands.</p>
+  <p>Six edges can be paired up 15 ways. Quotient those by rotation and you're left with <b>five distinct tiles</b>, a small enough alphabet to learn in a minute, with real texture between the extremes. Tile&nbsp;0 curls everything back on itself. Tile&nbsp;4 sends everything straight across and never turns.</p>
+  <p>That last column has a practical consequence. <b class="coral">Tile 4 looks identical in all six rotations</b>, so in the finished game, pressing the rotate key on a straight-through tile does nothing, six times in a row, which reads to a player as a broken control. The UI has to skip aliased rotations. It's the sort of thing you only find by playing.</p>
 </section>
 
 <figure class="fig reveal" id="fig-tiles">
@@ -360,8 +360,8 @@
 <section class="beat">
   <div class="eyebrow">The design problem</div>
   <h2>The deck is the design.</h2>
-  <p>The first real finding was that using all five tiles equally produces a game where mostly nothing happens. Fill a 37-cell board from a uniform deck and you close <b class="coral">0.70 loops on average</b>, with <b class="coral">48% of boards closing nothing at all</b>. Half your games end scoreless. That isn't a game, it's a screensaver.</p>
-  <p>The fix is blunter than I expected: throw out three of the five tiles. Use only tile&nbsp;0 and tile&nbsp;2 in a <b class="amber">1:2 ratio</b> — twelve and twenty-five on a 37-cell board. Tile&nbsp;0 curls arcs back toward each other, tile&nbsp;2 carries a chain across distance, and the mix makes closure common without making it automatic. Same board, same random placement, <b class="sage">4.19 loops</b> and a 0.8% chance of a dead game.</p>
+  <p>The first real finding was that using all five tiles equally produces a game where mostly nothing happens. Fill a 37-cell board from a uniform deck and you close <b class="coral">0.70 loops on average</b>, with <b class="coral">48% of boards closing nothing at all</b>. That's a screensaver, not a game.</p>
+  <p>The fix was blunter than I expected. Throw out three of the five tiles. Use only tile&nbsp;0 and tile&nbsp;2 in a <b class="amber">1:2 ratio</b>, twelve and twenty-five on a 37-cell board. Tile&nbsp;0 curls arcs back toward each other, tile&nbsp;2 carries a chain across distance, and the mix makes closure common without making it automatic. Same board, same random placement, <b class="sage">4.19 loops</b> and a 0.8% chance of a dead game.</p>
 </section>
 
 <figure class="fig reveal" id="fig-deck">
@@ -393,25 +393,25 @@
 <section class="beat">
   <div class="eyebrow">The finding that shaped scoring</div>
   <h2>Most loops are the smallest possible loop.</h2>
-  <p>And there is nothing you can do about it:</p>
-  <blockquote>No matter how the deck is reweighted, <b>between 61% and 75% of every closed loop is the minimal one</b> — three tight turns curling around a single vertex.</blockquote>
-  <p>That's not a tuning problem, it's a property of hexagonal geometry. Three tight turns meeting at a corner is by far the easiest way for arcs to close, and it stays dominant under every deck and board size I tried. I spent a while trying to engineer around it with "spacer" tiles meant to push closures apart, and the experiment came back not merely negative but <b>backwards</b> — spacers concentrated even more probability onto the minimal case. That path is closed.</p>
-  <p>So the design accepts it instead. Scoring by <b class="amber">enclosed area</b> rather than by loop count makes minimal loops cheap, fast, incidental points, and puts the real decision weight on the rare long loops that wrap actual territory. Scoring purely by loop count, tested head to head, was consistently the <b>weakest</b> separator of skill — it pays out exactly the thing the geometry hands you for free.</p>
+  <p>And you cannot tune it away:</p>
+  <blockquote>No matter how the deck is reweighted, <b>between 61% and 75% of every closed loop is the minimal one</b>, three tight turns curling around a single vertex.</blockquote>
+  <p>It's a property of hexagonal geometry, not a tuning problem. Three tight turns meeting at a corner is by far the easiest way for arcs to close, and it stays dominant under every deck and board size I tried. I spent a while trying to engineer around it with "spacer" tiles meant to push closures apart, and the experiment came back not merely negative but <b>backwards</b>. Spacers concentrated even more probability onto the minimal case.</p>
+  <p>So the design accepts it instead. Scoring by <b class="amber">enclosed area</b> rather than by loop count makes minimal loops cheap, incidental points, and puts the real decision weight on the rare long loops that wrap actual territory. Scoring purely by loop count, tested head to head, was consistently the <b>weakest</b> separator of skill. It pays out exactly what the geometry produces for free.</p>
 </section>
 
 <figure class="fig narrow reveal" id="fig-hist">
   <div class="wdg-head"><span>Loop length distribution · <b>tuned deck</b>, 2,000 boards</span><span id="h-tot"></span></div>
   <svg id="hist" role="img" aria-describedby="cap-4" aria-label="Distribution of loop length over 2,000 boards from the tuned deck. Length is arcs per loop, always a multiple of three." style="display:block;width:100%;padding:16px 8px 4px"></svg>
-  <figcaption class="cap" id="cap-4">Length is arcs per loop, always a multiple of three. The first bar is the minimal loop; everything to its right is where the game actually lives.</figcaption>
+  <figcaption class="cap" id="cap-4">Length is arcs per loop, always a multiple of three. The first bar is the minimal loop; everything to its right is where the real scoring happens.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 5 · GREEDY SETUP ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">The question that ate the project</div>
-  <h2>Is any of this actually strategic?</h2>
-  <p>There's an obvious way to play. Every turn, look at all your legal placements and make the one that scores the most <b>right now</b>. Call it greedy. It's the first thing anyone would code, and roughly what a new player does.</p>
-  <p>Greedy is very good. Against a player making random legal moves it wins 100% of games in eleven of the twelve configurations I tested. That's a low bar. The worrying part was what happened when I tried to beat greedy itself — because if nothing beats it, then the strategic depth I thought I was designing doesn't exist, and the game is a dice roll with extra steps.</p>
-  <p class="dim">What follows is four attempts, in the order I made them. Only one of them worked, and it isn't the one I spent the most time on.</p>
+  <h2>Is any of this strategic?</h2>
+  <p>The obvious way to play is greedy. Every turn, look at all your legal placements and make the one that scores the most <b>right now</b>. It's the first thing anyone would code, and roughly what a new player does.</p>
+  <p>Greedy is good. Against a player making random legal moves it wins 100% of games in eleven of the twelve configurations I tested. That's a low bar. The worrying part was what happened when I tried to beat greedy itself. If nothing beats it, then the strategic depth I thought I was designing doesn't exist, and the game is a dice roll with extra steps.</p>
+  <p class="dim">Four attempts follow, in the order I made them. Only one of them worked, and it isn't the one I spent the most time on.</p>
 </section>
 
 <!-- ═══════════════════ SCROLLY ═══════════════════ -->
@@ -423,26 +423,26 @@
     <div class="step" data-step="0">
       <div class="n">Attempt 01 · a smarter heuristic</div>
       <h3>Blocking the opponent doesn't help.</h3>
-      <p>The obvious strategic idea — weigh denying the opponent's future scoring against your own immediate gain — is the thing you'd tell a new player to start thinking about. I built it.</p>
-      <p>Against greedy it won between <b>41.7% and 58.3%</b> of games. A coin flip. It genuinely plays differently — denial-vs-denial games have consistently higher margins than greedy-vs-greedy — it just doesn't play <b>better</b>.</p>
+      <p>The obvious strategic idea, weighing denial of the opponent's future scoring against your own immediate gain, is the thing you'd tell a new player to start thinking about. I built it.</p>
+      <p>Against greedy it won between <b>41.7% and 58.3%</b> of games, a coin flip. It plays differently. Denial-vs-denial games have consistently higher margins than greedy-vs-greedy. It doesn't play <b>better</b>.</p>
     </div>
     <div class="step" data-step="1">
       <div class="n">Attempt 02 · self-play RL</div>
       <h3>It learned to beat random and stopped.</h3>
-      <p>So I built the whole apparatus: a batched reinforcement-learning environment, a readable reference implementation differentially tested bit-for-bit against a vectorized tensor version, twelve invariants, the works. Then trained a policy against itself.</p>
-      <p>Across six checkpoints its win rate against greedy was 0.000, 0.000, 0.000, 0.000, and finally <b class="coral">0.004</b>. The diagnostic was brutal: it averaged <b>0.46 points</b> per game against greedy's 28.6 — while scoring 13.6 against random. It hadn't learned nothing. It learned something that evaporated on contact with a competent opponent.</p>
+      <p>So I built the whole apparatus: a batched reinforcement-learning environment, a readable reference implementation differentially tested bit-for-bit against a vectorized tensor version, twelve invariants. Then trained a policy against itself.</p>
+      <p>Across six checkpoints its win rate against greedy was 0.000, 0.000, 0.000, 0.000, and finally <b class="coral">0.004</b>. It averaged <b>0.46 points</b> per game against greedy's 28.6, while scoring 13.6 against random. It had learned something, but nothing that survived a competent opponent.</p>
     </div>
     <div class="step" data-step="2">
       <div class="n">Attempt 03 · train directly against greedy</div>
       <h3>A plateau at nine percent.</h3>
-      <p>Cold-start never moved off zero and lost ground against random while it did. Warm-starting from the self-play checkpoint produced the only real progress of the entire RL effort — climbing to <b class="amber">8.6%</b> before flattening into a noisy 4–9% band with the margin pinned around −9.5.</p>
-      <p>And here's the detail I keep coming back to. Most of that margin gain came from <b>suppressing greedy's score</b> (28.6 → 12.8), not from scoring more itself (0.46 → 3.83). It had learned to be a nuisance. It had not learned to play.</p>
+      <p>Cold-start never moved off zero and lost ground against random while it did. Warm-starting from the self-play checkpoint produced the only real progress of the entire RL effort, climbing to <b class="amber">8.6%</b> before flattening into a noisy 4–9% band with the margin pinned around −9.5.</p>
+      <p>Most of that margin gain came from <b>suppressing greedy's score</b> (28.6 → 12.8), not from scoring more itself (0.46 → 3.83). It had learned to disrupt greedy, not to outscore it.</p>
     </div>
     <div class="step" data-step="3">
       <div class="n">Attempt 04 · no learning at all</div>
       <h3>Thirty lines of search.</h3>
-      <p>Rank your legal moves by immediate score — that ranking <b>is</b> the greedy heuristic — take the top K, and for each one simulate the rest of the game with both sides playing plain greedy. Keep whichever candidate produced the best final margin.</p>
-      <p>That's it. One step of policy improvement over greedy, no network anywhere. At K=8, rolling every candidate to the end of the game: <b class="sage">50 wins out of 50</b>, average score 27.98 to 5.34, margin <b class="sage">+22.64</b>. At that sample size a perfect record against a true win probability under 90% is a sub-1% event.</p>
+      <p>Rank your legal moves by immediate score (that ranking <b>is</b> the greedy heuristic), take the top K, and for each one simulate the rest of the game with both sides playing plain greedy. Keep whichever candidate produced the best final margin.</p>
+      <p>One step of policy improvement over greedy, no network anywhere. At K=8, rolling every candidate to the end of the game: <b class="sage">50 wins out of 50</b>, average score 27.98 to 5.34, margin <b class="sage">+22.64</b>. At that sample size a perfect record against a true win probability under 90% is a sub-1% event.</p>
     </div>
   </div>
 </section>
@@ -451,22 +451,22 @@
 <section class="beat tight">
   <div class="eyebrow">The verdict</div>
   <h2>Each method failed for its own reason.</h2>
-  <p>Three independent approaches all said "greedy is approximately unbeatable," and that left two very different explanations on the table. Either the game's strategic ceiling really is that low — or all three methods failed for their own reasons and none of them is evidence about the game at all.</p>
+  <p>Three independent approaches all said "greedy is approximately unbeatable," and that left two different explanations on the table. Either the game's strategic ceiling is that low, or all three methods failed for their own reasons and none of them is evidence about the game at all.</p>
   <p>The second one is uncomfortable, because "my methods were bad" is exactly what you say when you don't want to accept a result. But the search bot settles it, and in hindsight the three failures are cleanly separable:</p>
   <ul>
     <li><b>The denial heuristic</b> looked one ply ahead. The exploit isn't visible from there.</li>
-    <li><b>Self-play</b> stalled in mutual mediocrity. Its two seats are the same evolving policy, so it only ever faces an equally mediocre copy of itself — nothing forces it to become as mechanically sharp as "always grab the best available score." This is a known failure mode, and it's why serious self-play systems mix in scripted opponents and past-checkpoint exploiters rather than trusting self-play alone.</li>
-    <li><b>Direct RL against greedy</b> plateaued on credit assignment: sparse terminal reward plus a flat, spatially-blind observation. The network sees a vector, not a board — no adjacency, no loop topology to hang a strategy on.</li>
+    <li><b>Self-play</b> stalled in mutual mediocrity. Its two seats are the same evolving policy, so it only ever faces an equally mediocre copy of itself. Nothing forces it to become as mechanically sharp as "always grab the best available score." This is a known failure mode, and it's why serious self-play systems mix in scripted opponents and past-checkpoint exploiters rather than trusting self-play alone.</li>
+    <li><b>Direct RL against greedy</b> plateaued on credit assignment: sparse terminal reward plus a flat, spatially-blind observation. The network sees a vector, not a board, with no adjacency or loop topology to hang a strategy on.</li>
   </ul>
-  <p>None of that is a fact about Hex Truchet. It's three facts about three methods.</p>
+  <p>None of that is a fact about Hex Truchet, only three facts about three methods.</p>
 </section>
 
 <!-- ═══════════════════ 7 · THE SWEEP ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">Tuning the opponent</div>
   <h2>More search is not reliably better.</h2>
-  <p>That +22.64 configuration costs about <b>29 seconds per game</b> of pure CPU, which makes it a research instrument rather than something a person can play against. It also cheats: it sees the opponent's exact hand during its rollouts, so it's an upper bound on exploitability under perfect information, not proof a fair agent gets there.</p>
-  <p>The useful result came from sweeping the parameters — and three things fell out that I didn't expect.</p>
+  <p>That +22.64 configuration costs about <b>29 seconds per game</b> of pure CPU, which makes it a research instrument rather than something a person can play against. It also cheats by seeing the opponent's exact hand during its rollouts, so it's an upper bound on exploitability under perfect information, not proof a fair agent gets there.</p>
+  <p>The useful result came from sweeping the parameters, and three things fell out that I didn't expect.</p>
 </section>
 
 <figure class="fig reveal" id="fig-sweep">
@@ -476,14 +476,14 @@
     <thead><tr><th>Config</th><th>K</th><th>Depth</th><th>Win vs greedy</th><th>Margin</th><th>Sec / move</th></tr></thead>
     <tbody></tbody>
   </table></div>
-  <figcaption class="cap" id="cap-5">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points — so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</figcaption>
+  <figcaption class="cap" id="cap-5">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points, so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</figcaption>
 </figure>
 
 <section class="beat tight">
   <ol>
-    <li><b>Depth is not where the strength lives.</b> K=3 at two plies matches or beats far deeper configurations at a fraction of the cost. Raise K before you raise depth. Depth does buy <b>margin</b> — +12.4 at eight plies versus +10.2 at two — so it makes the bot win harder, not more often.</li>
+    <li><b>Depth is not what makes the search strong.</b> K=3 at two plies matches or beats far deeper configurations at a fraction of the cost. Raise K before you raise depth. Depth does buy <b>margin</b> (+12.4 at eight plies versus +10.2 at two), so it makes the bot win harder, not more often.</li>
     <li><b>More search can be worse.</b> The K=6, depth-6 configuration scored the lowest win rate of any search config while costing ten times what the cheap one does.</li>
-    <li><b>The one solid, enormous difference</b> is greedy at 46.7% versus <b>any</b> search at 80–93%. Everything else in that table is noise wearing a decimal point.</li>
+    <li><b>The one solid, enormous difference</b> is greedy at 46.7% versus <b>any</b> search at 80–93%. Everything else in that table is noise.</li>
   </ol>
   <p>Which means the shipped game needs no distillation, no neural network, and no ML runtime. <b class="amber">The strong opponent is thirty lines of search</b> running in 30 milliseconds.</p>
 </section>
@@ -492,10 +492,10 @@
 <section class="beat">
   <div class="eyebrow">From research code to a game</div>
   <h2>Two bugs worth the retelling.</h2>
-  <p>The research all lived in Python. The game is Godot 4 and GDScript, which means the entire rules engine — legality, loop detection, scoring — had to be ported into a second language where it could quietly diverge from the first.</p>
-  <p>So it didn't get to be trusted. A Python script dumps complete games as packs: every move, the points gained, the exact set of loops closed, and both scores at every single step. A headless Godot test replays each pack through the new engine and asserts a match at every step. Only once that passed did anything get built on top. It's the same discipline that validated the RL environment's reference and vectorized implementations against each other, and it's why I could rewrite rendering later without wondering whether I'd broken the rules underneath.</p>
+  <p>The research all lived in Python. The game is Godot 4 and GDScript, which means the entire rules engine (legality, loop detection, scoring) had to be ported into a second language where it could quietly diverge from the first.</p>
+  <p>So I didn't trust it. A Python script dumps complete games as packs: every move, the points gained, the exact set of loops closed, and both scores at every step. A headless Godot test replays each pack through the new engine and asserts a match at every step. Only once that passed did anything get built on top. It's the same discipline that validated the RL environment's reference and vectorized implementations against each other, and it's why I could rewrite rendering later without wondering whether I'd broken the rules underneath.</p>
   <h3>The arc that escaped its cell</h3>
-  <p>The obvious way to draw a circular arc is to hand a curve primitive a start point, an end point and a radius. Don't. SVG-style arc commands re-derive the circle center from the radius and flags, and will cheerfully pick the reflected one — throwing the arc <b class="coral">outside</b> the hex it belongs to.</p>
+  <p>The obvious way to draw a circular arc is to hand a curve primitive a start point, an end point, and a radius. That doesn't work. SVG-style arc commands re-derive the circle center from the radius and flags, and will pick the reflected one, throwing the arc <b class="coral">outside</b> the hex it belongs to.</p>
 </section>
 
 <figure class="fig narrow reveal" id="fig-arc">
@@ -504,23 +504,23 @@
     <button class="toggle" data-arc="bad">Reflected center · the bug</button>
   </div>
   <svg class="bsvg" id="arcdemo" role="img" aria-describedby="arc-cap" aria-label="A tangent-continuous arc sampled into nineteen explicit points and drawn as a polyline, next to the naive version." style="max-width:380px;padding:16px 0"></svg>
-  <figcaption class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline.</figcaption>
+  <figcaption class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points (nineteen per arc here), then draw a polyline.</figcaption>
 </figure>
 
 <section class="beat tight">
   <h3>The board that froze the tab</h3>
-  <p>The game targets WebAssembly, and in WASM <b>the main thread must never block</b>. A bot that thinks for a full second doesn't show a spinner — it freezes the tab. No input, no rendering, nothing. That single constraint is what shapes the search budget, and it's why the bot yields between candidates rather than running its search to completion in one call.</p>
-  <p>The same constraint reappeared at deployment. Godot's web export defaults to real thread support, which requires cross-origin-isolation headers that itch.io's embed doesn't reliably serve. Turning thread support off makes the build header-independent and costs nothing — the search was never using threads, it was yielding across frames.</p>
-  <p class="dim">A note on loop detection, the one genuinely tricky port: a loop is a connected component of arcs where every arc has both ports matched, which is a union-find problem, and enclosed area is a ray-cast parity count. The tempting optimization is to examine only the neighborhood of the tile you just placed. An early version did exactly that and was silently wrong — it under-reported whenever one tile's arcs belonged to two independent loops at once. The failing case was a single placement closing a loop of length 3 and a loop of length 18 simultaneously. The board holds at most 111 arcs. Recomputing everything on every placement is instant. Don't be clever.</p>
+  <p>The game targets WebAssembly, and in WASM <b>the main thread must never block</b>. A bot that thinks for a full second doesn't show a spinner. It freezes the tab. That constraint shapes the search budget, and it's why the bot yields between candidates rather than running its search to completion in one call.</p>
+  <p>The same constraint reappeared at deployment. Godot's web export defaults to real thread support, which requires cross-origin-isolation headers that itch.io's embed doesn't reliably serve. Turning thread support off makes the build header-independent and costs nothing. The search was never using threads; it was yielding across frames.</p>
+  <p class="dim">A note on loop detection, the one tricky port: a loop is a connected component of arcs where every arc has both ports matched, which is a union-find problem, and enclosed area is a ray-cast parity count. The tempting optimization is to examine only the neighborhood of the tile you just placed. An early version did exactly that and was silently wrong. It under-reported whenever one tile's arcs belonged to two independent loops at once. The failing case was a single placement closing a loop of length 3 and a loop of length 18 simultaneously. The board holds at most 111 arcs, so recomputing everything on every placement is instant and there's no reason to optimize.</p>
 </section>
 
 <!-- ═══════════════════ 9 · LOSING WELL ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">The last problem</div>
   <h2>Then I had to teach it to lose.</h2>
-  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves — which makes search strength <b><a class="xref" href="https://orbitope.com/gridlocked/">useless as a difficulty dial</a></b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
-  <p>So difficulty here isn't a search parameter. It's a <b class="amber">greedy-slip</b>: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip at all.</p>
-  <p>It's a better handicap axis than depth because it degrades the bot's <b>judgment</b> rather than its <b>reach</b>. A slipping bot still plays coherently — it just periodically fails to see the trap it's walking into, which is a recognizably human way to lose.</p>
+  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves, which makes search strength <b><a class="xref" href="https://orbitope.com/gridlocked/">useless as a difficulty dial</a></b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
+  <p>So difficulty here is a <b class="amber">greedy-slip</b>, not a search parameter: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip.</p>
+  <p>It's a better handicap axis than depth because it degrades the bot's <b>judgment</b> rather than its <b>reach</b>. A slipping bot still plays coherently. It periodically fails to see the trap it's walking into, which is a recognizably human way to lose.</p>
 </section>
 
 <figure class="fig narrow reveal" id="fig-slip">
@@ -534,12 +534,12 @@
       <tr><td>Hard</td><td>3</td><td>8</td><td>0%</td><td style="text-align:right"><span class="tag no">not being fair</span></td></tr>
     </tbody>
   </table></div>
-  <figcaption class="cap" id="cap-7">Expert (K=8, full rollout) exists in the codebase but never ships — at 29 seconds a move it's a research instrument, not an opponent.</figcaption>
+  <figcaption class="cap" id="cap-7">Expert (K=8, full rollout) exists in the codebase but never ships. At 29 seconds a move it's a research instrument, not an opponent.</figcaption>
 </figure>
 
 <section class="beat tight">
-  <p>What's still open is whether 35% is the right number. It was picked by reasoning, not measured. I have exactly one playtester's worth of evidence that Medium is fun to lose to, and that playtester is me. Tuning it properly is a playtesting problem rather than a coding one, which makes it simultaneously the most interesting thing left and the thing least likely to get solved by staring at the code.</p>
-  <p>Which is a nice inversion of where this started. The first half of the project was a long fight to build something that could beat the obvious strategy. The second half was teaching it how to lose convincingly.</p>
+  <p>What's still open is whether 35% is the right number. I picked it by reasoning, not measurement. I have exactly one playtester's worth of evidence that Medium is fun to lose to, and that playtester is me. Tuning it properly is a playtesting problem rather than a coding one, which makes it simultaneously the most interesting thing left and the thing least likely to get solved by staring at the code.</p>
+  <p>The first half of the project was a long fight to build something that could beat the obvious strategy. The second half was teaching it how to lose convincingly.</p>
 </section>
 
 <div class="rule"></div>
@@ -549,7 +549,7 @@
   <h2>Play it.</h2>
   <p>Hot-seat, four bot difficulties, free placement, replays. Runs in the browser.</p>
   <a class="cta" href="https://orbitope.itch.io/hex-truchet">Play Hex Truchet</a>
-  <p style="margin-top:26px;font-size:12px">Start on Medium. Easy is not as easy as it sounds.</p>
+  <p style="margin-top:26px;font-size:12px">Start on Medium. Easy plays pure greedy, which is harder than it sounds.</p>
 </section>
 
 <section class="caveats">
