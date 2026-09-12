@@ -495,13 +495,13 @@
   <p>The research all lived in Python. The game is Godot 4 and GDScript, which means the entire rules engine — legality, loop detection, scoring — had to be ported into a second language where it could quietly diverge from the first.</p>
   <p>So it didn't get to be trusted. A Python script dumps complete games as packs: every move, the points gained, the exact set of loops closed, and both scores at every single step. A headless Godot test replays each pack through the new engine and asserts a match at every step. Only once that passed did anything get built on top. It's the same discipline that validated the RL environment's reference and vectorized implementations against each other, and it's why I could rewrite rendering later without wondering whether I'd broken the rules underneath.</p>
   <h3>The arc that escaped its cell</h3>
-  <p>The obvious way to draw a circular arc is to hand a curve primitive a start point, an end point and a radius. Don't. SVG-style arc commands re-derive the circle centre from the radius and flags, and will cheerfully pick the reflected one — throwing the arc <b class="coral">outside</b> the hex it belongs to.</p>
+  <p>The obvious way to draw a circular arc is to hand a curve primitive a start point, an end point and a radius. Don't. SVG-style arc commands re-derive the circle center from the radius and flags, and will cheerfully pick the reflected one — throwing the arc <b class="coral">outside</b> the hex it belongs to.</p>
 </section>
 
 <figure class="fig narrow reveal" id="fig-arc">
   <div class="toggle-row">
     <button class="toggle active" data-arc="good">Sampled points · correct</button>
-    <button class="toggle" data-arc="bad">Reflected centre · the bug</button>
+    <button class="toggle" data-arc="bad">Reflected center · the bug</button>
   </div>
   <svg class="bsvg" id="arcdemo" role="img" aria-describedby="arc-cap" aria-label="A tangent-continuous arc sampled into nineteen explicit points and drawn as a polyline, next to the naive version." style="max-width:380px;padding:16px 0"></svg>
   <figcaption class="cap" id="arc-cap">Compute the tangent-continuous arc yourself and sample it into explicit points — nineteen per arc here — then draw a polyline.</figcaption>
@@ -511,7 +511,7 @@
   <h3>The board that froze the tab</h3>
   <p>The game targets WebAssembly, and in WASM <b>the main thread must never block</b>. A bot that thinks for a full second doesn't show a spinner — it freezes the tab. No input, no rendering, nothing. That single constraint is what shapes the search budget, and it's why the bot yields between candidates rather than running its search to completion in one call.</p>
   <p>The same constraint reappeared at deployment. Godot's web export defaults to real thread support, which requires cross-origin-isolation headers that itch.io's embed doesn't reliably serve. Turning thread support off makes the build header-independent and costs nothing — the search was never using threads, it was yielding across frames.</p>
-  <p class="dim">A note on loop detection, the one genuinely tricky port: a loop is a connected component of arcs where every arc has both ports matched, which is a union-find problem, and enclosed area is a ray-cast parity count. The tempting optimization is to examine only the neighbourhood of the tile you just placed. An early version did exactly that and was silently wrong — it under-reported whenever one tile's arcs belonged to two independent loops at once. The failing case was a single placement closing a loop of length 3 and a loop of length 18 simultaneously. The board holds at most 111 arcs. Recomputing everything on every placement is instant. Don't be clever.</p>
+  <p class="dim">A note on loop detection, the one genuinely tricky port: a loop is a connected component of arcs where every arc has both ports matched, which is a union-find problem, and enclosed area is a ray-cast parity count. The tempting optimization is to examine only the neighborhood of the tile you just placed. An early version did exactly that and was silently wrong — it under-reported whenever one tile's arcs belonged to two independent loops at once. The failing case was a single placement closing a loop of length 3 and a loop of length 18 simultaneously. The board holds at most 111 arcs. Recomputing everything on every placement is instant. Don't be clever.</p>
 </section>
 
 <!-- ═══════════════════ 9 · LOSING WELL ═══════════════════ -->
