@@ -339,7 +339,7 @@
     <span style="flex:1;min-width:140px"><input type="range" id="g-scrub" min="0" max="37" value="0" style="width:100%" aria-label="Move number"></span>
     <button class="btn" id="g-play">Play</button>
   </div>
-  <figcaption class="cap" id="cap-1">Two greedy players alternate. Watch for the moment a long chain seals. The score jumps by the area it just captured, not by one.</figcaption>
+  <figcaption class="cap" id="cap-1">Two greedy players alternate. Watch for the moment a long chain seals. The score jumps by the area it just captured.</figcaption>
 </figure>
 
 <!-- ═══════════════════ 2 · FIVE TILES ═══════════════════ -->
@@ -360,7 +360,7 @@
 <section class="beat">
   <div class="eyebrow">The design problem</div>
   <h2>The deck is the design.</h2>
-  <p>The first real finding was that using all five tiles equally produces a game where mostly nothing happens. Fill a 37-cell board from a uniform deck and you close <b class="coral">0.70 loops on average</b>, with <b class="coral">48% of boards closing nothing at all</b>. That's a screensaver, not a game.</p>
+  <p>The first real finding was that using all five tiles equally produces a game where mostly nothing happens. Fill a 37-cell board from a uniform deck and you close <b class="coral">0.70 loops on average</b>, with <b class="coral">48% of boards closing nothing at all</b>. That's a screensaver.</p>
   <p>The fix was blunter than I expected. Throw out three of the five tiles. Use only tile&nbsp;0 and tile&nbsp;2 in a <b class="amber">1:2 ratio</b>, twelve and twenty-five on a 37-cell board. Tile&nbsp;0 curls arcs back toward each other, tile&nbsp;2 carries a chain across distance, and the mix makes closure common without making it automatic. Same board, same random placement, <b class="sage">4.19 loops</b> and a 0.8% chance of a dead game.</p>
 </section>
 
@@ -395,7 +395,7 @@
   <h2>Most loops are the smallest possible loop.</h2>
   <p>And you cannot tune it away:</p>
   <blockquote>No matter how the deck is reweighted, <b>between 61% and 75% of every closed loop is the minimal one</b>, three tight turns curling around a single vertex.</blockquote>
-  <p>It's a property of hexagonal geometry, not a tuning problem. Three tight turns meeting at a corner is by far the easiest way for arcs to close, and it stays dominant under every deck and board size I tried. I spent a while trying to engineer around it with "spacer" tiles meant to push closures apart, and the experiment came back not merely negative but <b>backwards</b>. Spacers concentrated even more probability onto the minimal case.</p>
+  <p>It's a property of hexagonal geometry. Three tight turns meeting at a corner is by far the easiest way for arcs to close, and it stays dominant under every deck and board size I tried. I spent a while trying to engineer around it with "spacer" tiles meant to push closures apart, and the experiment came back <b>backwards</b>. Spacers concentrated even more probability onto the minimal case.</p>
   <p>So the design accepts it instead. Scoring by <b class="amber">enclosed area</b> rather than by loop count makes minimal loops cheap, incidental points, and puts the real decision weight on the rare long loops that wrap actual territory. Scoring purely by loop count, tested head to head, was consistently the <b>weakest</b> separator of skill. It pays out exactly what the geometry produces for free.</p>
 </section>
 
@@ -411,7 +411,7 @@
   <h2>Is any of this strategic?</h2>
   <p>The obvious way to play is greedy. Every turn, look at all your legal placements and make the one that scores the most <b>right now</b>. It's the first thing anyone would code, and roughly what a new player does.</p>
   <p>Greedy is good. Against a player making random legal moves it wins 100% of games in eleven of the twelve configurations I tested. That's a low bar. The worrying part was what happened when I tried to beat greedy itself. If nothing beats it, then the strategic depth I thought I was designing doesn't exist, and the game is a dice roll with extra steps.</p>
-  <p class="dim">Four attempts follow, in the order I made them. Only one of them worked, and it isn't the one I spent the most time on.</p>
+  <p class="dim">Four attempts follow, in the order I made them. Only one of them worked.</p>
 </section>
 
 <!-- ═══════════════════ SCROLLY ═══════════════════ -->
@@ -424,7 +424,7 @@
       <div class="n">Attempt 01 · a smarter heuristic</div>
       <h3>Blocking the opponent doesn't help.</h3>
       <p>The obvious strategic idea, weighing denial of the opponent's future scoring against your own immediate gain, is the thing you'd tell a new player to start thinking about. I built it.</p>
-      <p>Against greedy it won between <b>41.7% and 58.3%</b> of games, a coin flip. It plays differently. Denial-vs-denial games have consistently higher margins than greedy-vs-greedy. It doesn't play <b>better</b>.</p>
+      <p>Against greedy it won between <b>41.7% and 58.3%</b> of games, a coin flip. It plays differently: denial-vs-denial games have consistently higher margins than greedy-vs-greedy.</p>
     </div>
     <div class="step" data-step="1">
       <div class="n">Attempt 02 · self-play RL</div>
@@ -436,7 +436,7 @@
       <div class="n">Attempt 03 · train directly against greedy</div>
       <h3>A plateau at nine percent.</h3>
       <p>Cold-start never moved off zero and lost ground against random while it did. Warm-starting from the self-play checkpoint produced the only real progress of the entire RL effort, climbing to <b class="amber">8.6%</b> before flattening into a noisy 4–9% band with the margin pinned around −9.5.</p>
-      <p>Most of that margin gain came from <b>suppressing greedy's score</b> (28.6 → 12.8), not from scoring more itself (0.46 → 3.83). It had learned to disrupt greedy, not to outscore it.</p>
+      <p>Most of that margin gain came from <b>suppressing greedy's score</b> (28.6 → 12.8); its own scoring barely moved (0.46 → 3.83). It had learned to disrupt greedy.</p>
     </div>
     <div class="step" data-step="3">
       <div class="n">Attempt 04 · no learning at all</div>
@@ -456,16 +456,16 @@
   <ul>
     <li><b>The denial heuristic</b> looked one ply ahead. The exploit isn't visible from there.</li>
     <li><b>Self-play</b> stalled in mutual mediocrity. Its two seats are the same evolving policy, so it only ever faces an equally mediocre copy of itself. Nothing forces it to become as mechanically sharp as "always grab the best available score." This is a known failure mode, and it's why serious self-play systems mix in scripted opponents and past-checkpoint exploiters rather than trusting self-play alone.</li>
-    <li><b>Direct RL against greedy</b> plateaued on credit assignment: sparse terminal reward plus a flat, spatially-blind observation. The network sees a vector, not a board, with no adjacency or loop topology to hang a strategy on.</li>
+    <li><b>Direct RL against greedy</b> plateaued on credit assignment: sparse terminal reward plus a flat, spatially-blind observation. The network sees a vector, with no adjacency or loop topology to hang a strategy on.</li>
   </ul>
-  <p>None of that is a fact about Hex Truchet, only three facts about three methods.</p>
+  <p>The three failures are facts about the methods. They say nothing about Hex Truchet.</p>
 </section>
 
 <!-- ═══════════════════ 7 · THE SWEEP ═══════════════════ -->
 <section class="beat">
   <div class="eyebrow">Tuning the opponent</div>
   <h2>More search is not reliably better.</h2>
-  <p>That +22.64 configuration costs about <b>29 seconds per game</b> of pure CPU, which makes it a research instrument rather than something a person can play against. It also cheats by seeing the opponent's exact hand during its rollouts, so it's an upper bound on exploitability under perfect information, not proof a fair agent gets there.</p>
+  <p>That +22.64 configuration costs about <b>29 seconds per game</b> of pure CPU, which makes it a research instrument. It also cheats by seeing the opponent's exact hand during its rollouts, so it's an upper bound on exploitability under perfect information.</p>
   <p>The useful result came from sweeping the parameters, and three things fell out that I didn't expect.</p>
 </section>
 
@@ -476,12 +476,12 @@
     <thead><tr><th>Config</th><th>K</th><th>Depth</th><th>Win vs greedy</th><th>Margin</th><th>Sec / move</th></tr></thead>
     <tbody></tbody>
   </table></div>
-  <figcaption class="cap" id="cap-5">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points, so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes, not rankings.</figcaption>
+  <figcaption class="cap" id="cap-5">n=30 per configuration (n=50 for K=8). At a ~90% win rate that's a standard error of about 5.5 points, so everything from 80% to 93% is statistically indistinguishable. Read this for magnitudes.</figcaption>
 </figure>
 
 <section class="beat tight">
   <ol>
-    <li><b>Depth is not what makes the search strong.</b> K=3 at two plies matches or beats far deeper configurations at a fraction of the cost. Raise K before you raise depth. Depth does buy <b>margin</b> (+12.4 at eight plies versus +10.2 at two), so it makes the bot win harder, not more often.</li>
+    <li><b>Depth is not what makes the search strong.</b> K=3 at two plies matches or beats far deeper configurations at a fraction of the cost. Raise K before you raise depth. Depth does buy <b>margin</b> (+12.4 at eight plies versus +10.2 at two), so it makes the bot win harder.</li>
     <li><b>More search can be worse.</b> The K=6, depth-6 configuration scored the lowest win rate of any search config while costing ten times what the cheap one does.</li>
     <li><b>The one solid, enormous difference</b> is greedy at 46.7% versus <b>any</b> search at 80–93%. Everything else in that table is noise.</li>
   </ol>
@@ -518,8 +518,8 @@
 <section class="beat">
   <div class="eyebrow">The last problem</div>
   <h2>Then I had to teach it to lose.</h2>
-  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves, which makes search strength <b><a class="xref" href="https://orbitope.com/gridlocked/">useless as a difficulty dial</a></b>. The ladder would have varied in how badly it beat you, not whether it did.</p>
-  <p>So difficulty here is a <b class="amber">greedy-slip</b>, not a search parameter: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip.</p>
+  <p>Every search configuration beats greedy around 90% of the time, and greedy is roughly "a reasonable human." Turn search up or down and that barely moves, which makes search strength <b><a class="xref" href="https://orbitope.com/gridlocked/">useless as a difficulty dial</a></b>. The ladder would only have varied how badly it beat you.</p>
+  <p>So difficulty here is a <b class="amber">greedy-slip</b>: a fixed probability that the bot deliberately plays the plain greedy move instead of the one its search chose. Medium runs at 35% slip on top of a K=3, two-ply search. Hard runs the same search with no slip.</p>
   <p>It's a better handicap axis than depth because it degrades the bot's <b>judgment</b> rather than its <b>reach</b>. A slipping bot still plays coherently. It periodically fails to see the trap it's walking into, which is a recognizably human way to lose.</p>
 </section>
 
@@ -534,11 +534,11 @@
       <tr><td>Hard</td><td>3</td><td>8</td><td>0%</td><td style="text-align:right"><span class="tag no">not being fair</span></td></tr>
     </tbody>
   </table></div>
-  <figcaption class="cap" id="cap-7">Expert (K=8, full rollout) exists in the codebase but never ships. At 29 seconds a move it's a research instrument, not an opponent.</figcaption>
+  <figcaption class="cap" id="cap-7">Expert (K=8, full rollout) exists in the codebase but never ships. At 29 seconds a move it's a research instrument.</figcaption>
 </figure>
 
 <section class="beat tight">
-  <p>What's still open is whether 35% is the right number. I picked it by reasoning, not measurement. I have exactly one playtester's worth of evidence that Medium is fun to lose to, and that playtester is me. Tuning it properly is a playtesting problem rather than a coding one, which makes it simultaneously the most interesting thing left and the thing least likely to get solved by staring at the code.</p>
+  <p>What's still open is whether 35% is the right number. I picked it by reasoning. I have exactly one playtester's worth of evidence that Medium is fun to lose to, and that playtester is me. Tuning it properly is a playtesting problem rather than a coding one, which makes it simultaneously the most interesting thing left and the thing least likely to get solved by staring at the code.</p>
   <p>The first half of the project was a long fight to build something that could beat the obvious strategy. The second half was teaching it how to lose convincingly.</p>
 </section>
 
@@ -555,9 +555,9 @@
 <section class="caveats">
   <h4>What this doesn't claim</h4>
   <div class="c"><div><b>The sweep is small.</b> 30 games per configuration. Differences inside the 80–93% band are not real differences, and I've tried not to lean on them.</div></div>
-  <div class="c"><div><b>The headline bot cheats.</b> The K=8 configuration sees the opponent's hand during its rollouts. +22.64 is an upper bound on exploitability under perfect information, not a fair-agent result.</div></div>
-  <div class="c"><div><b>"RL can't do this" is not the finding.</b> The finding is that <i>these</i> RL attempts failed, for reasons I can name. Dense reward shaping and a spatially-aware observation are the obvious next levers, and neither has been tried.</div></div>
-  <div class="c"><div><b>Difficulty is unvalidated.</b> One playtester. The 35% slip is a reasoned guess, not a measurement.</div></div>
+  <div class="c"><div><b>The headline bot cheats.</b> The K=8 configuration sees the opponent's hand during its rollouts. +22.64 is an upper bound on exploitability under perfect information.</div></div>
+  <div class="c"><div><b>The RL finding is narrow.</b> <i>These</i> RL attempts failed, for reasons I can name; I'm not claiming RL can't do this. Dense reward shaping and a spatially-aware observation are the obvious next levers, and neither has been tried.</div></div>
+  <div class="c"><div><b>Difficulty is unvalidated.</b> One playtester. The 35% slip is a reasoned guess.</div></div>
 </section>
 
 <div class="foot">
